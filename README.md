@@ -16,18 +16,26 @@ La page assume clairement la réalité de l’adresse :
 index.html
 README.md
 photos/
-  cover.jpg
-  chambre.jpg
-  lit.jpg
-  salle-de-bain.jpg
-  cuisine.jpg
-  ambiance.jpg
 ```
 
-Les photos ne sont pas incluses dans ce paquet afin de ne pas utiliser d’images génériques ou trompeuses.  
-Exportez les **photos réelles** de votre annonce et renommez-les exactement comme ci-dessus.
+Deux visuels réels sont déjà intégrés directement depuis `digiylyfe.net` :
 
-Même sans photos, la page reste lisible : des cadres de remplacement sont affichés automatiquement.
+```text
+Couverture — aperçu du centre médiéval
+https://digiylyfe.net/wp-content/uploads/2026/07/1D087BF5-6D9F-462D-91A5-6420FC1A20BD_1_105_c.jpeg
+
+Chambre
+https://digiylyfe.net/wp-content/uploads/2026/07/F9595D25-B9F1-4049-95CD-00554BC8F369.png
+```
+
+La galerie utilise désormais les liens réels transmis pour la chambre,
+la cuisine et la salle à manger.
+
+La galerie est désormais complète avec la salle de bain réelle :
+
+```text
+https://digiylyfe.net/wp-content/uploads/2026/07/E8A9CEFE-987D-442E-B094-07C933E8C27B.png
+```
 
 ## Mise en ligne sur GitHub Pages
 
@@ -90,25 +98,109 @@ dans :
 - le JSON-LD ;
 - `CONFIG.siteUrl`.
 
-## Configuration des boutons
+## Tarif
 
-Dans `index.html`, recherchez :
-
-```js
-const CONFIG = {
+```text
+78 € par nuitée
+≈ 51 165 FCFA par nuitée
 ```
 
-Le lien Booking est déjà renseigné.
+Conversion utilisée :
 
-Ajoutez les numéros au format international :
-
-```js
-phone: "+33600000000",
-whatsapp: "33600000000",
+```text
+1 € = 655,957 FCFA
+78 € = 51 164,646 FCFA
+Montant affiché arrondi : 51 165 FCFA
 ```
 
-Tant que ces champs restent vides, les boutons **Appeler** et **WhatsApp** sont automatiquement masqués.  
-Aucun faux contact n’est affiché.
+Le formulaire calcule automatiquement le nombre de nuitées et affiche une estimation
+dans les deux devises. Le montant définitif reste confirmé par Baptiste selon les dates
+et les conditions du séjour.
+
+## Arrivée indépendante
+
+Le logement permet une arrivée autonome grâce à une **boîte à clés sécurisée**.
+
+```text
+Arrivée possible : à partir de 16 h et jusqu’à 22 h
+```
+
+Règles de sécurité :
+
+- le code de la boîte à clés n’est jamais publié sur la fiche ;
+- il est transmis uniquement en privé ;
+- il est envoyé après confirmation écrite de la réservation ;
+- il ne doit pas être partagé avec une autre personne ;
+- le code peut être changé entre deux séjours.
+
+## Horaires d’arrivée et de départ
+
+```text
+Arrivée indépendante : à partir de 16 h et jusqu’à 22 h, via boîte à clés sécurisée
+Départ : entre 8 h et 10 h
+```
+
+Le formulaire refuse une heure d’arrivée antérieure à 16 h ou postérieure à 22 h.
+
+## Demande de réservation avec calendrier
+
+La page contient un formulaire direct avec :
+
+- date d’arrivée ;
+- date de départ ;
+- nombre de voyageurs ;
+- nom du voyageur ;
+- WhatsApp ou email du voyageur ;
+- heure d’arrivée estimée ;
+- message libre.
+
+Le formulaire ne stocke aucune donnée.
+
+Au clic sur le bouton principal, la demande est préparée dans WhatsApp au numéro :
+
+```text
++221 77 134 28 89
+```
+
+Un bouton secondaire prépare la même demande par email :
+
+```text
+baptistejb24@gmail.com
+```
+
+Important :
+
+- il s’agit d’une demande, pas d’une réservation automatique ;
+- aucune date n’est bloquée automatiquement ;
+- Baptiste confirme ou refuse personnellement ;
+- aucun paiement ne doit être envoyé avant confirmation écrite.
+
+## Contacts publics
+
+La communication directe se fait uniquement par :
+
+```text
+WhatsApp : +221 77 134 28 89
+Email : baptistejb24@gmail.com
+```
+
+Aucun bouton d’appel ni SMS n’est affiché sur la page.
+
+Le message WhatsApp est prérempli automatiquement depuis la fiche.
+
+## Paiement direct par Sendwave
+
+```text
+Numéro : +221 77 134 28 89
+Bénéficiaire indiqué : JB BRAUVILLE
+```
+
+Règles de sécurité affichées sur la page :
+
+- paiement uniquement après confirmation écrite du séjour ;
+- confirmation par WhatsApp ou email ;
+- ne jamais communiquer de code secret ;
+- ne jamais envoyer d’argent à un autre numéro sans confirmation écrite.
 
 ## Bouton Booking
 
@@ -146,12 +238,35 @@ La page présente notamment :
 - télévision ;
 - lave-linge ;
 - coin repas ;
-- arrivée de 15 h à 22 h ;
+- arrivée à partir de 16 h et jusqu’à 22 h ;
 - départ de 8 h à 10 h ;
 - logement non-fumeur ;
-- accès aux étages par les escaliers.
+- accès aux étages par les escaliers ;
+- tarif : 78 € par nuitée, soit environ 51 165 FCFA ;
+- contact WhatsApp : +221 77 134 28 89 ;
+- email : baptistejb24@gmail.com ;
+- paiement Sendwave : +221 77 134 28 89, bénéficiaire indiqué JB BRAUVILLE.
 
 Avant publication définitive, vérifiez que chaque information correspond toujours à l’annonce active.
+
+## Visuels intégrés
+
+- **Aperçu du centre médiéval** : couverture principale ;
+- **Chambre — vue principale** :
+  `https://digiylyfe.net/wp-content/uploads/2026/07/F9595D25-B9F1-4049-95CD-00554BC8F369.png`
+- **Chambre — deuxième angle** :
+  `https://digiylyfe.net/wp-content/uploads/2026/07/254BB65E-9E5B-4316-AD0F-C7DA83DFAC6E.png`
+- **Cuisine équipée** :
+  `https://digiylyfe.net/wp-content/uploads/2026/07/83C44D61-28B0-4020-A1DF-B7D72F5081B8.png`
+- **Salle à manger — première vue** :
+  `https://digiylyfe.net/wp-content/uploads/2026/07/B4063FF2-EBFE-4191-A7E3-82D524060858.png`
+- **Salle à manger — deuxième vue** :
+  `https://digiylyfe.net/wp-content/uploads/2026/07/8515DA79-52D4-4802-A9B2-502BBA8DA067.png`
+
+- **Salle de bain privative** :
+  `https://digiylyfe.net/wp-content/uploads/2026/07/E8A9CEFE-987D-442E-B094-07C933E8C27B.png`
+
+Les images sont hébergées sur `digiylyfe.net`, ce qui garde le dépôt GitHub léger.
 
 ## Architecture DIGIYLYFE
 
@@ -174,3 +289,5 @@ La relation et l’identité restent au professionnel.
 ---
 
 **DIGIYLYFE — Le terrain garde la main.**
+[README(46).md](https://github.com/user-attachments/files/30365321/README.46.md)
+
