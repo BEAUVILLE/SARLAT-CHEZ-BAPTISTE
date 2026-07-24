@@ -226,6 +226,25 @@
     .footer strong{color:var(--green)}
 
 
+
+    .price-highlight{
+      margin-top:18px;display:inline-flex;flex-wrap:wrap;align-items:center;gap:10px;
+      padding:13px 16px;border-radius:19px;
+      background:linear-gradient(135deg,rgba(255,240,184,.96),rgba(201,150,66,.92));
+      color:#21150c;border:1px solid rgba(255,255,255,.5);
+      box-shadow:0 14px 32px rgba(0,0,0,.24);
+      font-weight:1000;
+    }
+    .price-highlight strong{font-size:22px}
+    .price-highlight span{font-size:12px}
+    .price-box{
+      margin-top:16px;padding:16px;border-radius:20px;
+      background:linear-gradient(145deg,#fff8e8,#efd6a8);
+      border:2px solid rgba(201,150,66,.48);
+    }
+    .price-box strong{display:block;font-size:24px;color:var(--ink)}
+    .price-box span{display:block;margin-top:5px;color:var(--soft);font-size:12px;font-weight:850}
+
     .reservation{
       background:linear-gradient(145deg,#fffdf7,#f3e4c9);
     }
@@ -326,6 +345,10 @@
           Baptiste vit dans le logement, sans rester dans vos jambes.
           La cuisine est accessible et partagée avec l’hôte.
         </p>
+        <div class="price-highlight" aria-label="Tarif par nuitée">
+          <strong>78 € / nuitée</strong>
+          <span>≈ 51 165 FCFA · conversion indicative</span>
+        </div>
         <div class="actions">
           <a class="btn btn-primary" id="bookingTop" href="#" target="_blank" rel="noopener noreferrer">
             Voir les disponibilités sur Booking →
@@ -347,6 +370,8 @@
       <article class="quick-card"><i>🛏️</i><strong>Grand lit</strong><small>Lit king size et linge de lit.</small></article>
       <article class="quick-card"><i>🛁</i><strong>Salle de bain privative</strong><small>Baignoire, serviettes et sèche-cheveux.</small></article>
       <article class="quick-card"><i>📍</i><strong>Centre de Sarlat</strong><small>3 rue du Troubadour Cairels, 24200.</small></article>
+      <article class="quick-card"><i>🔑</i><strong>Arrivée indépendante</strong><small>Boîte à clés sécurisée avec code transmis en privé.</small></article>
+      <article class="quick-card"><i>💶</i><strong>78 € la nuitée</strong><small>Environ 51 165 FCFA par nuit.</small></article>
     </section>
 
     <section class="section" id="decouvrir">
@@ -372,7 +397,8 @@
           <div class="list-item">✓ Une présence rassurante, jamais envahissante</div>
           <div class="list-item">✓ Une adresse réelle et habitée à Sarlat</div>
           <div class="list-item">✓ Pas d’ambiance d’hôtel impersonnel</div>
-          <div class="list-item">✓ Arrivée à annoncer à l’avance</div>
+          <div class="list-item">✓ Arrivée indépendante grâce à une boîte à clés sécurisée</div>
+          <div class="list-item">✓ Code transmis uniquement en privé après confirmation</div>
         </div>
       </div>
     </section>
@@ -442,7 +468,7 @@
       <span class="eyebrow">Informations utiles</span>
       <h2 id="regles-title">Une arrivée simple et claire.</h2>
       <div class="rules">
-        <article class="rule"><strong>Arrivée</strong><small>Entre 15 h et 22 h. Merci d’annoncer votre heure d’arrivée à l’avance.</small></article>
+        <article class="rule"><strong>Arrivée indépendante</strong><small>À partir de 16 h et jusqu’à 22 h grâce à une boîte à clés sécurisée. Le code est communiqué en privé après confirmation.</small></article>
         <article class="rule"><strong>Départ</strong><small>Entre 8 h et 10 h.</small></article>
         <article class="rule"><strong>Accès</strong><small>Les étages supérieurs sont accessibles uniquement par les escaliers.</small></article>
         <article class="rule"><strong>Animaux</strong><small>Animaux acceptés selon les conditions de la réservation ; un supplément peut s’appliquer.</small></article>
@@ -459,6 +485,8 @@
       <p class="section-intro">
         Cette demande ne bloque pas automatiquement le calendrier.
         Baptiste vérifie les disponibilités et vous répond personnellement sur WhatsApp.
+        Tarif de base : <strong>78 € par nuitée</strong>, soit environ
+        <strong>51 165 FCFA</strong>.
       </p>
 
       <div class="reservation-grid">
@@ -493,7 +521,8 @@
 
           <div class="field">
             <label for="arrivalTime">Heure d’arrivée estimée</label>
-            <input id="arrivalTime" name="arrivalTime" type="time">
+            <input id="arrivalTime" name="arrivalTime" type="time" min="16:00" max="22:00" aria-describedby="arrivalTimeHelp">
+            <small id="arrivalTimeHelp" style="color:var(--soft);font-size:11px;font-weight:750">Arrivée possible entre 16 h et 22 h.</small>
           </div>
 
           <div class="field full">
@@ -501,10 +530,18 @@
             <textarea id="requestMessage" name="requestMessage" placeholder="Précisez votre demande ou une information utile."></textarea>
           </div>
 
+          <div class="price-box full" id="stayEstimate" aria-live="polite">
+            <strong>78 € / nuitée</strong>
+            <span>≈ 51 165 FCFA · choisissez vos dates pour calculer le séjour.</span>
+          </div>
+
           <p class="form-note">
             Aucune donnée n’est enregistrée sur ce site. En validant, votre demande
             est préparée dans WhatsApp. La réservation devient définitive uniquement
-            après confirmation écrite de Baptiste.
+            après confirmation écrite de Baptiste.<br><br>
+            🔑 L’arrivée peut se faire de manière indépendante grâce à une boîte à clés.
+            Pour votre sécurité, le code n’est jamais affiché sur cette page : il est
+            transmis uniquement en privé après confirmation du séjour.
           </p>
 
           <button class="btn btn-contact full" type="submit">
@@ -525,9 +562,10 @@
             jusqu’à la réponse de Baptiste.
           </p>
           <ul>
-            <li>✓ Arrivée prévue entre 15 h et 22 h</li>
+            <li>✓ Arrivée indépendante à partir de 16 h et jusqu’à 22 h</li>
             <li>✓ Départ prévu entre 8 h et 10 h</li>
             <li>✓ Maximum : 2 voyageurs</li>
+            <li>✓ Tarif : 78 € ≈ 51 165 FCFA / nuitée</li>
             <li>✓ Réponse par WhatsApp ou email</li>
             <li>✓ Paiement seulement après confirmation écrite</li>
           </ul>
@@ -578,7 +616,9 @@
         <h2 id="booking-title">Choisissez vos dates sur Booking.</h2>
         <p class="section-intro">
           La fiche DIGIYLYFE présente l’adresse et son identité.
-          Booking conserve le calendrier, les prix, les conditions et la réservation sécurisée.
+          Tarif de référence : <strong>78 € par nuitée</strong>, soit environ
+          <strong>51 165 FCFA</strong>. Booking peut afficher le montant en FCFA
+          selon la devise du visiteur et conserve les conditions de réservation.
           Pour échanger directement avec Baptiste : WhatsApp ou email uniquement.
         </p>
         <div class="actions">
@@ -629,6 +669,10 @@
       address: "3 rue du Troubadour Cairels, 24200 Sarlat-la-Canéda, France"
     };
 
+    const NIGHT_RATE_EUR = 78;
+    const XOF_PER_EUR = 655.957;
+    const NIGHT_RATE_XOF = Math.round(NIGHT_RATE_EUR * XOF_PER_EUR);
+
     const bookingLinks = [document.getElementById("bookingTop"), document.getElementById("bookingBottom")];
     bookingLinks.forEach(link => link.href = CONFIG.bookingUrl);
 
@@ -666,6 +710,38 @@
     const departureInput = document.getElementById("departure");
     const reservationStatus = document.getElementById("reservationStatus");
     const emailReservation = document.getElementById("emailReservation");
+    const stayEstimate = document.getElementById("stayEstimate");
+
+    function formatXof(value) {
+      return Math.round(value).toLocaleString("fr-FR") + " FCFA";
+    }
+
+    function getNightCount() {
+      if (!arrivalInput.value || !departureInput.value) return 0;
+      const start = new Date(arrivalInput.value + "T12:00:00");
+      const end = new Date(departureInput.value + "T12:00:00");
+      const nights = Math.round((end - start) / 86400000);
+      return nights > 0 ? nights : 0;
+    }
+
+    function updateStayEstimate() {
+      const nights = getNightCount();
+
+      if (!nights) {
+        stayEstimate.innerHTML =
+          "<strong>78 € / nuitée</strong>" +
+          "<span>≈ 51 165 FCFA · choisissez vos dates pour calculer le séjour.</span>";
+        return;
+      }
+
+      const totalEur = nights * NIGHT_RATE_EUR;
+      const totalXof = nights * NIGHT_RATE_XOF;
+
+      stayEstimate.innerHTML =
+        "<strong>" + nights + " nuitée(s) : " + totalEur.toLocaleString("fr-FR") + " €</strong>" +
+        "<span>Estimation : " + formatXof(totalXof) +
+        " · tarif final confirmé par Baptiste.</span>";
+    }
 
     const todayIso = new Date().toISOString().split("T")[0];
     arrivalInput.min = todayIso;
@@ -676,12 +752,20 @@
       if (departureInput.value && departureInput.value <= arrivalInput.value) {
         departureInput.value = "";
       }
+      updateStayEstimate();
     });
+
+    departureInput.addEventListener("change", updateStayEstimate);
 
     function buildReservationMessage() {
       const formData = new FormData(reservationForm);
       const arrival = formData.get("arrival");
       const departure = formData.get("departure");
+      const arrivalTime = formData.get("arrivalTime");
+
+      if (arrivalTime && (arrivalTime < "16:00" || arrivalTime > "22:00")) {
+        throw new Error("L’heure d’arrivée doit être comprise entre 16 h et 22 h.");
+      }
 
       if (!arrival || !departure) {
         throw new Error("Choisissez les dates d’arrivée et de départ.");
@@ -689,6 +773,10 @@
       if (departure <= arrival) {
         throw new Error("La date de départ doit être après la date d’arrivée.");
       }
+
+      const nights = getNightCount();
+      const totalEur = nights * NIGHT_RATE_EUR;
+      const totalXof = nights * NIGHT_RATE_XOF;
 
       const lines = [
         "Bonjour Baptiste,",
@@ -698,9 +786,12 @@
         "Arrivée : " + arrival,
         "Départ : " + departure,
         "Voyageurs : " + formData.get("guests"),
+        "Tarif par nuitée : 78 € (environ 51 165 FCFA)",
+        "Estimation du séjour : " + totalEur.toLocaleString("fr-FR") + " € / " + formatXof(totalXof),
         "Nom : " + formData.get("guestName"),
         "Contact : " + formData.get("guestContact"),
-        "Heure d’arrivée estimée : " + (formData.get("arrivalTime") || "à préciser"),
+        "Heure d’arrivée estimée : " + (formData.get("arrivalTime") || "à préciser, entre 16 h et 22 h"),
+        "Arrivée indépendante : oui, par boîte à clés après transmission privée du code",
         "Message : " + (formData.get("requestMessage") || "Aucun message supplémentaire"),
         "",
         "Je comprends que cette demande doit être confirmée par écrit avant tout paiement."
@@ -745,6 +836,7 @@
   </script>
 </body>
 </html>
+
 
 
 
