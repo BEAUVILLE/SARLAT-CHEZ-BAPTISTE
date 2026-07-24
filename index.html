@@ -15,7 +15,7 @@
   <meta property="og:url" content="https://sarlat-chez-baptiste.digiylyfe.com/">
   <meta property="og:title" content="SARLAT CHEZ BAPTISTE — Chez l’habitant">
   <meta property="og:description" content="Une chambre privée dans une maison réellement habitée, au cœur de Sarlat.">
-  <meta property="og:image" content="https://sarlat-chez-baptiste.digiylyfe.com/photos/cover.jpg">
+  <meta property="og:image" content="https://digiylyfe.net/wp-content/uploads/2026/07/F9595D25-B9F1-4049-95CD-00554BC8F369.png">
   <meta property="og:locale" content="fr_FR">
   <meta name="twitter:card" content="summary_large_image">
 
@@ -171,13 +171,13 @@
       border:1px solid var(--line);font-size:13px;line-height:1.4;font-weight:850;
     }
 
-    .gallery{display:grid;grid-template-columns:1.35fr .65fr .65fr;gap:10px;margin-top:22px}
+    .gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:22px}
     .photo{
       position:relative;overflow:hidden;min-height:240px;border-radius:22px;
       background:linear-gradient(145deg,#6d5139,#24180f);
       border:1px solid rgba(91,61,35,.18);
     }
-    .photo:first-child{grid-row:span 2;min-height:500px}
+    .photo:first-child{grid-column:span 2;grid-row:span 2;min-height:500px}
     .photo img{display:block;width:100%;height:100%;object-fit:cover}
     .photo.missing img{display:none}
     .photo::before{
@@ -266,8 +266,9 @@
     <section class="hero" aria-labelledby="title">
       <img
         class="hero-photo"
-        src="photos/cover.jpg"
-        alt="Chambre de SARLAT CHEZ BAPTISTE"
+        src="https://digiylyfe.net/wp-content/uploads/2026/07/1D087BF5-6D9F-462D-91A5-6420FC1A20BD_1_105_c.jpeg"
+        alt="Aperçu du centre médiéval de Sarlat-la-Canéda"
+        fetchpriority="high"
         onerror="this.hidden=true"
       >
       <div class="hero-copy">
@@ -293,6 +294,10 @@
         </div>
       </div>
     </section>
+
+    <p style="margin:10px 6px 0;color:#6e5845;font-size:11px;line-height:1.4;font-weight:850;text-align:center">
+      Aperçu du centre médiéval de Sarlat-la-Canéda · Photo réelle transmise par l’hôte
+    </p>
 
     <section class="quick" aria-label="Informations principales">
       <article class="quick-card"><i>👥</i><strong>Jusqu’à 2 voyageurs</strong><small>Une chambre double dans une habitation occupée.</small></article>
@@ -333,30 +338,40 @@
       <span class="eyebrow">Photos réelles du logement</span>
       <h2 id="photos-title">Découvrez votre espace.</h2>
       <p class="section-intro">
-        Déposez les photos de l’annonce dans le dossier <strong>photos</strong>
-        avec les noms indiqués dans le README. Les cadres ci-dessous se remplissent automatiquement.
+        La galerie présente maintenant toutes les pièces principales :
+        la chambre sous deux angles, la cuisine équipée, deux vues de la salle
+        à manger et la salle de bain privative.
       </p>
 
       <div class="gallery">
         <figure class="photo">
-          <img src="photos/chambre.jpg" alt="Chambre privée Chez Baptiste" loading="lazy" onerror="this.parentElement.classList.add('missing')">
+          <img src="https://digiylyfe.net/wp-content/uploads/2026/07/F9595D25-B9F1-4049-95CD-00554BC8F369.png" alt="Chambre privée de SARLAT CHEZ BAPTISTE" loading="lazy" onerror="this.parentElement.classList.add('missing')">
           <figcaption class="photo-label">La chambre privée</figcaption>
         </figure>
+
         <figure class="photo">
-          <img src="photos/lit.jpg" alt="Grand lit Chez Baptiste" loading="lazy" onerror="this.parentElement.classList.add('missing')">
-          <figcaption class="photo-label">Le grand lit</figcaption>
+          <img src="https://digiylyfe.net/wp-content/uploads/2026/07/254BB65E-9E5B-4316-AD0F-C7DA83DFAC6E.png" alt="Deuxième vue de la chambre de SARLAT CHEZ BAPTISTE" loading="lazy" onerror="this.parentElement.classList.add('missing')">
+          <figcaption class="photo-label">La chambre · autre angle</figcaption>
         </figure>
+
         <figure class="photo">
-          <img src="photos/salle-de-bain.jpg" alt="Salle de bain privative Chez Baptiste" loading="lazy" onerror="this.parentElement.classList.add('missing')">
-          <figcaption class="photo-label">La salle de bain</figcaption>
+          <img src="https://digiylyfe.net/wp-content/uploads/2026/07/83C44D61-28B0-4020-A1DF-B7D72F5081B8.png" alt="Cuisine équipée accessible chez Baptiste" loading="lazy" onerror="this.parentElement.classList.add('missing')">
+          <figcaption class="photo-label">La cuisine équipée</figcaption>
         </figure>
+
         <figure class="photo">
-          <img src="photos/cuisine.jpg" alt="Cuisine accessible et partagée Chez Baptiste" loading="lazy" onerror="this.parentElement.classList.add('missing')">
-          <figcaption class="photo-label">La cuisine partagée</figcaption>
+          <img src="https://digiylyfe.net/wp-content/uploads/2026/07/B4063FF2-EBFE-4191-A7E3-82D524060858.png" alt="Première vue de la salle à manger chez Baptiste" loading="lazy" onerror="this.parentElement.classList.add('missing')">
+          <figcaption class="photo-label">La salle à manger</figcaption>
         </figure>
+
         <figure class="photo">
-          <img src="photos/ambiance.jpg" alt="Ambiance de Chez Baptiste à Sarlat" loading="lazy" onerror="this.parentElement.classList.add('missing')">
-          <figcaption class="photo-label">L’ambiance de la maison</figcaption>
+          <img src="https://digiylyfe.net/wp-content/uploads/2026/07/8515DA79-52D4-4802-A9B2-502BBA8DA067.png" alt="Deuxième vue de la salle à manger chez Baptiste" loading="lazy" onerror="this.parentElement.classList.add('missing')">
+          <figcaption class="photo-label">La salle à manger · autre vue</figcaption>
+        </figure>
+
+        <figure class="photo">
+          <img src="https://digiylyfe.net/wp-content/uploads/2026/07/E8A9CEFE-987D-442E-B094-07C933E8C27B.png" alt="Salle de bain privative de SARLAT CHEZ BAPTISTE" loading="lazy" onerror="this.parentElement.classList.add('missing')">
+          <figcaption class="photo-label">La salle de bain privative</figcaption>
         </figure>
       </div>
     </section>
@@ -522,7 +537,6 @@
   </script>
 </body>
 </html>
-
 
 
 
