@@ -225,9 +225,52 @@
     }
     .footer strong{color:var(--green)}
 
+
+    .reservation{
+      background:linear-gradient(145deg,#fffdf7,#f3e4c9);
+    }
+    .reservation-grid{
+      display:grid;grid-template-columns:1.15fr .85fr;gap:18px;margin-top:22px;
+    }
+    .booking-form{
+      display:grid;grid-template-columns:repeat(2,1fr);gap:12px;
+      padding:20px;border-radius:24px;background:#fff;border:1px solid var(--line);
+      box-shadow:0 14px 36px rgba(61,43,22,.09);
+    }
+    .field{display:grid;gap:7px}
+    .field.full{grid-column:1/-1}
+    .field label{
+      font-size:11px;font-weight:1000;letter-spacing:.06em;text-transform:uppercase;color:var(--soft);
+    }
+    .field input,.field select,.field textarea{
+      width:100%;min-height:50px;padding:12px 13px;border-radius:15px;
+      border:1px solid rgba(72,48,28,.2);background:#fff;color:var(--ink);
+      font:inherit;font-size:14px;font-weight:750;
+    }
+    .field textarea{min-height:110px;resize:vertical}
+    .form-note{
+      grid-column:1/-1;margin:0;padding:12px 13px;border-radius:15px;
+      background:rgba(49,91,67,.08);color:var(--soft);font-size:11px;line-height:1.5;font-weight:800;
+    }
+    .reservation-summary{
+      padding:20px;border-radius:24px;background:linear-gradient(145deg,#24180f,#3a291c);
+      color:#fff;border:1px solid rgba(255,229,164,.35);
+    }
+    .reservation-summary h3{margin:0;font-size:22px}
+    .reservation-summary p{margin:10px 0 0;color:rgba(255,255,255,.76);font-size:13px;line-height:1.55;font-weight:750}
+    .reservation-summary ul{margin:16px 0 0;padding:0;list-style:none;display:grid;gap:9px}
+    .reservation-summary li{
+      padding:11px 12px;border-radius:14px;background:rgba(255,255,255,.08);
+      font-size:12px;font-weight:850;
+    }
+    .status{
+      grid-column:1/-1;min-height:22px;margin:0;color:var(--green);
+      font-size:12px;font-weight:900;
+    }
+
     @media(max-width:850px){
       .quick{grid-template-columns:repeat(2,1fr)}
-      .truth-grid,.booking{grid-template-columns:1fr}
+      .truth-grid,.booking,.reservation-grid{grid-template-columns:1fr}
       .gallery{grid-template-columns:1fr 1fr}
       .photo:first-child{grid-column:1/-1;grid-row:auto;min-height:460px}
       .amenities{grid-template-columns:repeat(2,1fr)}
@@ -248,7 +291,7 @@
       .section{padding:20px 14px;border-radius:24px}
       .gallery{grid-template-columns:1fr}
       .photo,.photo:first-child{min-height:360px;grid-column:auto}
-      .amenities,.rules{grid-template-columns:1fr}
+      .amenities,.rules,.booking-form{grid-template-columns:1fr}
     }
   </style>
 </head>
@@ -409,6 +452,89 @@
     </section>
 
 
+
+    <section class="section reservation" aria-labelledby="reservation-title">
+      <span class="eyebrow">Demande de réservation directe</span>
+      <h2 id="reservation-title">Choisissez vos dates.</h2>
+      <p class="section-intro">
+        Cette demande ne bloque pas automatiquement le calendrier.
+        Baptiste vérifie les disponibilités et vous répond personnellement sur WhatsApp.
+      </p>
+
+      <div class="reservation-grid">
+        <form class="booking-form" id="reservationForm">
+          <div class="field">
+            <label for="arrival">Date d’arrivée</label>
+            <input id="arrival" name="arrival" type="date" required>
+          </div>
+
+          <div class="field">
+            <label for="departure">Date de départ</label>
+            <input id="departure" name="departure" type="date" required>
+          </div>
+
+          <div class="field">
+            <label for="guests">Voyageurs</label>
+            <select id="guests" name="guests" required>
+              <option value="1">1 voyageur</option>
+              <option value="2" selected>2 voyageurs</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="guestName">Votre nom</label>
+            <input id="guestName" name="guestName" type="text" autocomplete="name" placeholder="Nom et prénom" required>
+          </div>
+
+          <div class="field">
+            <label for="guestContact">Votre WhatsApp ou email</label>
+            <input id="guestContact" name="guestContact" type="text" placeholder="+33… ou adresse@email.com" required>
+          </div>
+
+          <div class="field">
+            <label for="arrivalTime">Heure d’arrivée estimée</label>
+            <input id="arrivalTime" name="arrivalTime" type="time">
+          </div>
+
+          <div class="field full">
+            <label for="requestMessage">Votre message</label>
+            <textarea id="requestMessage" name="requestMessage" placeholder="Précisez votre demande ou une information utile."></textarea>
+          </div>
+
+          <p class="form-note">
+            Aucune donnée n’est enregistrée sur ce site. En validant, votre demande
+            est préparée dans WhatsApp. La réservation devient définitive uniquement
+            après confirmation écrite de Baptiste.
+          </p>
+
+          <button class="btn btn-contact full" type="submit">
+            Envoyer la demande sur WhatsApp →
+          </button>
+
+          <a class="btn full" id="emailReservation" href="#" style="border:1px solid var(--line);background:#fff">
+            Envoyer la demande par email
+          </a>
+
+          <p class="status" id="reservationStatus" aria-live="polite"></p>
+        </form>
+
+        <aside class="reservation-summary">
+          <h3>Avant d’envoyer</h3>
+          <p>
+            Vérifiez les dates choisies. Cette demande reste sans engagement
+            jusqu’à la réponse de Baptiste.
+          </p>
+          <ul>
+            <li>✓ Arrivée prévue entre 15 h et 22 h</li>
+            <li>✓ Départ prévu entre 8 h et 10 h</li>
+            <li>✓ Maximum : 2 voyageurs</li>
+            <li>✓ Réponse par WhatsApp ou email</li>
+            <li>✓ Paiement seulement après confirmation écrite</li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+
     <section class="section" aria-labelledby="contact-title">
       <span class="eyebrow">Contact direct et paiement</span>
       <h2 id="contact-title">WhatsApp ou email uniquement.</h2>
@@ -534,6 +660,88 @@
         copyStatus.textContent = "Numéro Sendwave : " + CONFIG.sendwaveNumber;
       }
     });
+
+    const reservationForm = document.getElementById("reservationForm");
+    const arrivalInput = document.getElementById("arrival");
+    const departureInput = document.getElementById("departure");
+    const reservationStatus = document.getElementById("reservationStatus");
+    const emailReservation = document.getElementById("emailReservation");
+
+    const todayIso = new Date().toISOString().split("T")[0];
+    arrivalInput.min = todayIso;
+    departureInput.min = todayIso;
+
+    arrivalInput.addEventListener("change", () => {
+      departureInput.min = arrivalInput.value || todayIso;
+      if (departureInput.value && departureInput.value <= arrivalInput.value) {
+        departureInput.value = "";
+      }
+    });
+
+    function buildReservationMessage() {
+      const formData = new FormData(reservationForm);
+      const arrival = formData.get("arrival");
+      const departure = formData.get("departure");
+
+      if (!arrival || !departure) {
+        throw new Error("Choisissez les dates d’arrivée et de départ.");
+      }
+      if (departure <= arrival) {
+        throw new Error("La date de départ doit être après la date d’arrivée.");
+      }
+
+      const lines = [
+        "Bonjour Baptiste,",
+        "",
+        "Je souhaite demander une réservation pour SARLAT CHEZ BAPTISTE.",
+        "",
+        "Arrivée : " + arrival,
+        "Départ : " + departure,
+        "Voyageurs : " + formData.get("guests"),
+        "Nom : " + formData.get("guestName"),
+        "Contact : " + formData.get("guestContact"),
+        "Heure d’arrivée estimée : " + (formData.get("arrivalTime") || "à préciser"),
+        "Message : " + (formData.get("requestMessage") || "Aucun message supplémentaire"),
+        "",
+        "Je comprends que cette demande doit être confirmée par écrit avant tout paiement."
+      ];
+
+      return lines.join("\n");
+    }
+
+    reservationForm.addEventListener("submit", event => {
+      event.preventDefault();
+      reservationStatus.textContent = "";
+
+      try {
+        const message = buildReservationMessage();
+        window.open(
+          "https://wa.me/" + CONFIG.whatsapp.replace(/\D/g, "") + "?text=" + encodeURIComponent(message),
+          "_blank",
+          "noopener"
+        );
+        reservationStatus.textContent = "Votre demande est prête dans WhatsApp.";
+      } catch (error) {
+        reservationStatus.textContent = error.message;
+      }
+    });
+
+    emailReservation.addEventListener("click", event => {
+      event.preventDefault();
+      reservationStatus.textContent = "";
+
+      try {
+        const message = buildReservationMessage();
+        const subject = "Demande de réservation — SARLAT CHEZ BAPTISTE";
+        window.location.href =
+          "mailto:" + CONFIG.email +
+          "?subject=" + encodeURIComponent(subject) +
+          "&body=" + encodeURIComponent(message);
+      } catch (error) {
+        reservationStatus.textContent = error.message;
+      }
+    });
+
   </script>
 </body>
 </html>
