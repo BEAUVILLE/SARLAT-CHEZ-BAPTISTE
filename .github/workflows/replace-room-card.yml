@@ -1,0 +1,71 @@
+name: Replace room card
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/replace-room-card.yml
+
+permissions:
+  contents: write
+
+jobs:
+  replace-card:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Replace standalone QR with room card
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("index.html")
+          text = path.read_text(encoding="utf-8")
+
+          old_css = '.qr{width:min(230px,100%);aspect-ratio:1;background:#fff;border-radius:18px;padding:10px}'
+          new_css = '.site-card-link{display:block;width:100%;border-radius:18px;overflow:hidden;background:#fff;box-shadow:0 14px 34px rgba(0,0,0,.3)}\n    .site-card{display:block;width:100%;height:auto;object-fit:contain}'
+
+          old_block = '''      <aside class="booking-panel">
+        <img class="qr" id="siteQr" alt="QR vers SARLAT CHEZ BAPTISTE">
+        <strong>Sur téléphone : touchez le QR</strong>
+        <small>Sur papier : scannez-le pour ouvrir cette fiche DIGIYLYFE.</small>
+      </aside>'''
+
+          new_block = '''      <aside class="booking-panel">
+        <a class="site-card-link" href="https://sarlat-chez-baptiste.digiylyfe.com/" target="_blank" rel="noopener noreferrer" aria-label="Ouvrir la fiche SARLAT CHEZ BAPTISTE">
+          <img class="site-card" src="CARTE%20SARLAT%20BAPTISTE.png" alt="Carte de visite SARLAT CHEZ BAPTISTE avec QR vers le site">
+        </a>
+        <strong>Carte à poser dans la chambre</strong>
+        <small>Sur téléphone : touchez la carte. Sur papier : scannez son QR pour ouvrir le site.</small>
+      </aside>'''
+
+          old_js = '''    const qr = document.getElementById("siteQr");
+    qr.src = "https://quickchart.io/qr?size=360&margin=2&text=" + encodeURIComponent(CONFIG.siteUrl);
+
+'''
+
+          if old_css not in text:
+              raise SystemExit("Ancien style QR introuvable")
+          if old_block not in text:
+              raise SystemExit("Ancien bloc QR introuvable")
+          if old_js not in text:
+              raise SystemExit("Ancien JavaScript QR introuvable")
+
+          text = text.replace(old_css, new_css, 1)
+          text = text.replace(old_block, new_block, 1)
+          text = text.replace(old_js, "", 1)
+          path.write_text(text, encoding="utf-8")
+          PY
+
+      - name: Commit replacement
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Show room card instead of standalone QR"
+          git push
