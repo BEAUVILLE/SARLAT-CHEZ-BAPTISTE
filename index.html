@@ -245,6 +245,26 @@
     .price-box strong{display:block;font-size:24px;color:var(--ink)}
     .price-box span{display:block;margin-top:5px;color:var(--soft);font-size:12px;font-weight:850}
 
+
+    .availability-panel{
+      margin-top:16px;padding:16px;border-radius:20px;
+      background:#fff;border:1px solid var(--line);
+      box-shadow:0 12px 30px rgba(61,43,22,.08);
+    }
+    .availability-panel h3{margin:0;font-size:18px}
+    .availability-panel p{margin:7px 0 0;color:var(--soft);font-size:12px;line-height:1.5;font-weight:750}
+    .availability-list{display:grid;gap:8px;margin-top:13px}
+    .availability-item{
+      display:flex;justify-content:space-between;gap:12px;align-items:center;
+      padding:11px 12px;border-radius:14px;background:#f8eee0;
+      color:var(--ink);font-size:12px;font-weight:900;
+    }
+    .availability-item strong{color:#9a3628}
+    .availability-open{
+      background:rgba(49,91,67,.1);border:1px solid rgba(49,91,67,.18);
+    }
+    .availability-open strong{color:var(--green)}
+
     .reservation{
       background:linear-gradient(145deg,#fffdf7,#f3e4c9);
     }
@@ -489,6 +509,28 @@
         <strong>51 165 FCFA</strong>.
       </p>
 
+      <div class="availability-panel" aria-labelledby="availability-title">
+        <h3 id="availability-title">Disponibilités connues</h3>
+        <p>Les périodes ci-dessous sont automatiquement refusées par le formulaire.</p>
+        <div class="availability-list">
+          <div class="availability-item">
+            <span>Du 24 au 30 juillet 2026</span><strong>Occupé</strong>
+          </div>
+          <div class="availability-item">
+            <span>Du 4 au 7 août 2026</span><strong>Occupé</strong>
+          </div>
+          <div class="availability-item">
+            <span>11 août 2026</span><strong>Fermé</strong>
+          </div>
+          <div class="availability-item availability-open">
+            <span>Autres dates jusqu’au 30 octobre 2026</span><strong>Sur demande</strong>
+          </div>
+          <div class="availability-item">
+            <span>À partir du 31 octobre 2026</span><strong>Fermé au moins 6 mois</strong>
+          </div>
+        </div>
+      </div>
+
       <div class="reservation-grid">
         <form class="booking-form" id="reservationForm">
           <div class="field">
@@ -673,6 +715,13 @@
     const XOF_PER_EUR = 655.957;
     const NIGHT_RATE_XOF = Math.round(NIGHT_RATE_EUR * XOF_PER_EUR);
 
+    const LAST_AVAILABLE_DATE = "2026-10-30";
+    const BLOCKED_PERIODS = [
+      { start: "2026-07-24", end: "2026-07-30", label: "du 24 au 30 juillet 2026" },
+      { start: "2026-08-04", end: "2026-08-07", label: "du 4 au 7 août 2026" },
+      { start: "2026-08-11", end: "2026-08-11", label: "le 11 août 2026" }
+    ];
+
     const bookingLinks = [document.getElementById("bookingTop"), document.getElementById("bookingBottom")];
     bookingLinks.forEach(link => link.href = CONFIG.bookingUrl);
 
@@ -734,6 +783,15 @@
         return;
       }
 
+      try {
+        validateAvailability(arrivalInput.value, departureInput.value);
+      } catch (error) {
+        stayEstimate.innerHTML =
+          "<strong>Dates indisponibles</strong>" +
+          "<span>" + error.message + "</span>";
+        return;
+      }
+
       const totalEur = nights * NIGHT_RATE_EUR;
       const totalXof = nights * NIGHT_RATE_XOF;
 
@@ -746,6 +804,33 @@
     const todayIso = new Date().toISOString().split("T")[0];
     arrivalInput.min = todayIso;
     departureInput.min = todayIso;
+    arrivalInput.max = LAST_AVAILABLE_DATE;
+    departureInput.max = LAST_AVAILABLE_DATE;
+
+    function dateRangesOverlap(startA, endA, startB, endB) {
+      return startA <= endB && endA >= startB;
+    }
+
+    function findBlockedPeriod(arrival, departure) {
+      return BLOCKED_PERIODS.find(period =>
+        dateRangesOverlap(arrival, departure, period.start, period.end)
+      );
+    }
+
+    function validateAvailability(arrival, departure) {
+      if (arrival > LAST_AVAILABLE_DATE || departure > LAST_AVAILABLE_DATE) {
+        throw new Error(
+          "Le logement est fermé après le 30 octobre 2026 pendant au moins six mois."
+        );
+      }
+
+      const blocked = findBlockedPeriod(arrival, departure);
+      if (blocked) {
+        throw new Error(
+          "Ces dates croisent une période indisponible : " + blocked.label + "."
+        );
+      }
+    }
 
     arrivalInput.addEventListener("change", () => {
       departureInput.min = arrivalInput.value || todayIso;
@@ -774,6 +859,8 @@
         throw new Error("La date de départ doit être après la date d’arrivée.");
       }
 
+      validateAvailability(arrival, departure);
+
       const nights = getNightCount();
       const totalEur = nights * NIGHT_RATE_EUR;
       const totalXof = nights * NIGHT_RATE_XOF;
@@ -788,6 +875,7 @@
         "Voyageurs : " + formData.get("guests"),
         "Tarif par nuitée : 78 € (environ 51 165 FCFA)",
         "Estimation du séjour : " + totalEur.toLocaleString("fr-FR") + " € / " + formatXof(totalXof),
+        "Disponibilité vérifiée sur la fiche : aucune période bloquée détectée",
         "Nom : " + formData.get("guestName"),
         "Contact : " + formData.get("guestContact"),
         "Heure d’arrivée estimée : " + (formData.get("arrivalTime") || "à préciser, entre 16 h et 22 h"),
