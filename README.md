@@ -98,6 +98,26 @@ dans :
 - le JSON-LD ;
 - `CONFIG.siteUrl`.
 
+## Calendrier des disponibilités 2026
+
+Périodes indisponibles :
+
+```text
+Du 24 au 30 juillet 2026 : occupé
+Du 4 au 7 août 2026 : occupé
+11 août 2026 : fermé
+```
+
+Disponibilité générale :
+
+```text
+Autres dates : sur demande jusqu’au 30 octobre 2026
+À partir du 31 octobre 2026 : fermé pendant au moins 6 mois
+```
+
+Le formulaire bloque automatiquement toute demande qui chevauche une période
+indisponible ou dépasse le 30 octobre 2026.
+
 ## Tarif
 
 ```text
@@ -156,10 +176,10 @@ La page contient un formulaire direct avec :
 
 Le formulaire ne stocke aucune donnée.
 
-Au clic sur le bouton principal, la demande est préparée dans WhatsApp au numéro :
+Au clic sur le bouton principal, la demande est préparée dans WhatsApp au numéro français :
 
 ```text
-+221 77 134 28 89
++33 6 38 32 94 23
 ```
 
 Un bouton secondaire prépare la même demande par email :
@@ -175,12 +195,23 @@ Important :
 - Baptiste confirme ou refuse personnellement ;
 - aucun paiement ne doit être envoyé avant confirmation écrite.
 
+## WhatsApp France et paiement Sendwave
+
+```text
+Demandes et échanges WhatsApp : +33 6 38 32 94 23
+Paiement Sendwave : +221 77 134 28 89
+Bénéficiaire Sendwave : JB BRAUVILLE
+```
+
+Le numéro français fonctionne sur WhatsApp même sans carte SIM active dans le téléphone.
+Le numéro sénégalais reste réservé au paiement Sendwave.
+
 ## Contacts publics
 
 La communication directe se fait uniquement par :
 
 ```text
-WhatsApp : +221 77 134 28 89
+WhatsApp France : +33 6 38 32 94 23
 Email : baptistejb24@gmail.com
 ```
 
@@ -243,7 +274,7 @@ La page présente notamment :
 - logement non-fumeur ;
 - accès aux étages par les escaliers ;
 - tarif : 78 € par nuitée, soit environ 51 165 FCFA ;
-- contact WhatsApp : +221 77 134 28 89 ;
+- contact WhatsApp : +33 6 38 32 94 23 ;
 - email : baptistejb24@gmail.com ;
 - paiement Sendwave : +221 77 134 28 89, bénéficiaire indiqué JB BRAUVILLE.
 
@@ -289,5 +320,6 @@ La relation et l’identité restent au professionnel.
 ---
 
 **DIGIYLYFE — Le terrain garde la main.**
-[README(46).md](https://github.com/user-attachments/files/30365321/README.46.md)
+[README(48).md](https://github.com/user-attachments/files/30365505/README.48.md)
+
 
