@@ -1,4 +1,4 @@
-name: Replace room card
+name: Enforce direct booking
 
 on:
   push:
@@ -11,61 +11,89 @@ permissions:
   contents: write
 
 jobs:
-  replace-card:
+  direct-booking:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Replace standalone QR with room card
+      - name: Remove Booking and keep direct reservation only
         shell: bash
         run: |
           python - <<'PY'
           from pathlib import Path
+          import re
 
-          path = Path("index.html")
-          text = path.read_text(encoding="utf-8")
+          index_path = Path("index.html")
+          readme_path = Path("README.md")
 
-          old_css = '.qr{width:min(230px,100%);aspect-ratio:1;background:#fff;border-radius:18px;padding:10px}'
-          new_css = '.site-card-link{display:block;width:100%;border-radius:18px;overflow:hidden;background:#fff;box-shadow:0 14px 34px rgba(0,0,0,.3)}\n    .site-card{display:block;width:100%;height:auto;object-fit:contain}'
+          html = index_path.read_text(encoding="utf-8")
+          readme = readme_path.read_text(encoding="utf-8")
 
-          old_block = '''      <aside class="booking-panel">
-        <img class="qr" id="siteQr" alt="QR vers SARLAT CHEZ BAPTISTE">
-        <strong>Sur téléphone : touchez le QR</strong>
-        <small>Sur papier : scannez-le pour ouvrir cette fiche DIGIYLYFE.</small>
-      </aside>'''
+          html = html.replace(
+              '<a class="btn btn-primary" id="bookingTop" href="#" target="_blank" rel="noopener noreferrer">Voir l’annonce Booking →</a>',
+              '<a class="btn btn-primary" href="#reservation">Faire une demande directe →</a>'
+          )
+          html = html.replace(
+              '<a class="btn btn-primary" id="bookingBottom" href="#" target="_blank" rel="noopener noreferrer">Ouvrir l’annonce Booking →</a>',
+              '<a class="btn btn-primary" href="#reservation">Choisir mes dates →</a>'
+          )
+          html = html.replace(
+              '<section class="section reservation" aria-labelledby="reservation-title">',
+              '<section class="section reservation" id="reservation" aria-labelledby="reservation-title">'
+          )
+          html = re.sub(
+              r',bookingUrl:"https://www\.booking\.com/hotel/fr/chez-baptiste\.fr\.html"',
+              '',
+              html
+          )
+          html = html.replace(
+              '[document.getElementById("bookingTop"),document.getElementById("bookingBottom")].forEach(x=>x.href=CONFIG.bookingUrl);\n    ',
+              ''
+          )
+          html = html.replace("Booking", "réservation directe")
+          html = html.replace("booking.com", "sarlat-chez-baptiste.digiylyfe.com")
 
-          new_block = '''      <aside class="booking-panel">
-        <a class="site-card-link" href="https://sarlat-chez-baptiste.digiylyfe.com/" target="_blank" rel="noopener noreferrer" aria-label="Ouvrir la fiche SARLAT CHEZ BAPTISTE">
-          <img class="site-card" src="CARTE%20SARLAT%20BAPTISTE.png" alt="Carte de visite SARLAT CHEZ BAPTISTE avec QR vers le site">
-        </a>
-        <strong>Carte à poser dans la chambre</strong>
-        <small>Sur téléphone : touchez la carte. Sur papier : scannez son QR pour ouvrir le site.</small>
-      </aside>'''
+          start = readme.find("## Bouton Booking")
+          end = readme.find("## Informations affichées", start)
+          replacement = '''## Réservation directe sans commission
 
-          old_js = '''    const qr = document.getElementById("siteQr");
-    qr.src = "https://quickchart.io/qr?size=360&margin=2&text=" + encodeURIComponent(CONFIG.siteUrl);
+La fiche n'oriente pas le voyageur vers une plateforme de réservation.
+
+La demande se fait directement par :
+
+```text
+Calendrier intégré à la fiche
+WhatsApp France : +33 6 38 32 94 23
+Email : baptistejb24@gmail.com
+```
+
+DIGIYLYFE ne prélève aucune commission. Baptiste confirme personnellement les dates et le montant avant tout paiement.
 
 '''
+          if start != -1:
+              if end == -1:
+                  readme = readme[:start] + replacement
+              else:
+                  readme = readme[:start] + replacement + readme[end:]
 
-          if old_css not in text:
-              raise SystemExit("Ancien style QR introuvable")
-          if old_block not in text:
-              raise SystemExit("Ancien bloc QR introuvable")
-          if old_js not in text:
-              raise SystemExit("Ancien JavaScript QR introuvable")
+          if "Booking" in html or "booking.com" in html:
+              raise SystemExit("Une référence Booking reste dans index.html")
+          if "Booking" in readme or "booking.com" in readme:
+              raise SystemExit("Une référence Booking reste dans README.md")
+          if 'href="#reservation"' not in html:
+              raise SystemExit("Le bouton direct vers le calendrier manque")
 
-          text = text.replace(old_css, new_css, 1)
-          text = text.replace(old_block, new_block, 1)
-          text = text.replace(old_js, "", 1)
-          path.write_text(text, encoding="utf-8")
+          index_path.write_text(html, encoding="utf-8")
+          readme_path.write_text(readme, encoding="utf-8")
           PY
 
-      - name: Commit replacement
+      - name: Commit direct booking correction
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html
-          git commit -m "Show room card instead of standalone QR"
+          rm .github/workflows/replace-room-card.yml
+          git add index.html README.md .github/workflows/replace-room-card.yml
+          git commit -m "Remove Booking and keep zero-commission direct booking"
           git push
