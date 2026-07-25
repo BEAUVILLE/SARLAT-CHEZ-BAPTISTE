@@ -76,19 +76,21 @@ Le fichier suivant est affiché dans la fiche à la place d’un QR isolé :
 
 ```text
 CARTE SARLAT BAPTISTE.png
+sarlat-gallery.webp
 ```
 
 La carte est cliquable sur téléphone et son QR ouvre directement la fiche publique.
 
 ## Photos réelles
 
-- aperçu du centre médiéval ;
-- deux vues de la chambre ;
+- pièce de vie et salle à manger ;
+- chambre avec cheminée en pierre ;
+- chambre privée avec grand lit ;
 - cuisine équipée ;
-- deux vues de la salle à manger ;
-- salle de bain privative.
+- salle de bain privative ;
+- détail de la pierre du Périgord.
 
-Les images sont actuellement chargées depuis `digiylyfe.net`.
+La galerie optimisée est servie localement depuis `sarlat-gallery.webp`.
 
 ## Fichiers principaux
 
