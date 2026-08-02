@@ -1,0 +1,76 @@
+name: Appliquer le mode mobile compact
+
+on:
+  push:
+    paths:
+      - .github/workflows/apply-mobile-compact.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sarlat-mobile-compact
+  cancel-in-progress: true
+
+jobs:
+  patch-index:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Relier les assets mobiles
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('index.html')
+          html = path.read_text(encoding='utf-8')
+
+          if 'name="digiy-build"' not in html:
+              html = html.replace(
+                  '<meta name="theme-color" content="#25190f">',
+                  '<meta name="theme-color" content="#25190f">\n    <meta name="digiy-build" content="sarlat-mobile-compact-20260802">',
+                  1,
+              )
+          elif 'sarlat-mobile-compact-20260802' not in html:
+              import re
+              html = re.sub(
+                  r'<meta name="digiy-build" content="[^"]*">',
+                  '<meta name="digiy-build" content="sarlat-mobile-compact-20260802">',
+                  html,
+                  count=1,
+              )
+
+          if 'mobile-compact.css' not in html:
+              html = html.replace(
+                  '</head>',
+                  '    <link rel="stylesheet" href="./mobile-compact.css?v=20260802-1">\n</head>',
+                  1,
+              )
+
+          if 'mobile-compact.js' not in html:
+              html = html.replace(
+                  '</body>',
+                  '    <script src="./mobile-compact.js?v=20260802-1" defer></script>\n</body>',
+                  1,
+              )
+
+          path.write_text(html, encoding='utf-8')
+          PY
+
+      - name: Publier la liaison
+        shell: bash
+        run: |
+          if git diff --quiet -- index.html; then
+            echo "index.html déjà relié"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Activer la navigation mobile compacte"
+          git push
