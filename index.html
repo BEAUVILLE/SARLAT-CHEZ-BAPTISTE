@@ -930,19 +930,21 @@
                     </div>
                     <div class="calendar-legend">
                         <span><span class="dot available-dot"></span> Disponible</span>
-                        <span><span class="dot blocked-dot"></span> Occupé / indisponible</span>
+                        <span><span class="dot blocked-dot"></span> Déjà occupé / indisponible</span>
                         <span><span class="dot selected-dot"></span> Votre sélection</span>
                     </div>
                 </div>
 
                 <!-- disponibilités fixes -->
                 <div class="availability">
-                    <div class="period"><span>30 juillet 2026</span><strong>Occupé</strong></div>
-                    <div class="period"><span>1 au 3 août 2026</span><strong>Occupé</strong></div>
-                    <div class="period"><span>8 août 2026</span><strong>Occupé</strong></div>
-                    <div class="period"><span>26 au 28 août 2026</span><strong>Occupé</strong></div>
-                    <div class="period"><span>15 et 16 septembre 2026</span><strong>Occupé</strong></div>
-                    <div class="period"><span>29 septembre 2026</span><strong>Occupé</strong></div>
+                    <div class="period"><span>15 et 16 août 2026</span><strong>Déjà occupé</strong></div>
+                    <div class="period"><span>18 et 19 août 2026</span><strong>Déjà occupé</strong></div>
+                    <div class="period"><span>26 au 28 août 2026</span><strong>Déjà occupé</strong></div>
+                    <div class="period"><span>5 septembre 2026</span><strong>Déjà occupé</strong></div>
+                    <div class="period"><span>15 et 16 septembre 2026</span><strong>Déjà occupé</strong></div>
+                    <div class="period"><span>19 septembre 2026</span><strong>Déjà occupé</strong></div>
+                    <div class="period"><span>24 septembre 2026</span><strong>Déjà occupé</strong></div>
+                    <div class="period"><span>29 septembre 2026</span><strong>Déjà occupé</strong></div>
                     <div class="period open"><span>Autres dates jusqu'au 30 octobre 2026</span><strong>Sur demande</strong></div>
                     <div class="period"><span>À partir du 31 octobre 2026</span><strong>Fermé</strong></div>
                 </div>
@@ -1073,19 +1075,20 @@
                 lastDate: "2026-10-30",
                 // Dates bloquées (occupées)
                 blockedDates: [
-                    "2026-07-30",
-                    "2026-08-01",
-                    "2026-08-02",
-                    "2026-08-03",
-                    "2026-08-08",
+                    "2026-08-15",
+                    "2026-08-16",
+                    "2026-08-18",
+                    "2026-08-19",
                     "2026-08-26",
                     "2026-08-27",
                     "2026-08-28",
+                    "2026-09-05",
                     "2026-09-15",
                     "2026-09-16",
+                    "2026-09-19",
+                    "2026-09-24",
                     "2026-09-29"
-                ]
-            };
+                ]};
 
             // ===== WHATSAPP LINKS =====
             const waUrl = "https://wa.me/" + CFG.wa + "?text=" + encodeURIComponent(
@@ -1432,4 +1435,6 @@
     <script src="./mobile-compact.js?v=20260802-1" defer></script>
 </body>
 </html>
+
+
 
