@@ -1,0 +1,91 @@
+name: Correction GPS temporaire Chez Baptiste
+
+on:
+  push:
+    paths:
+      - .github/workflows/fix-sarlat-gps-temp.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sarlat-gps-fix
+  cancel-in-progress: false
+
+jobs:
+  patch-index:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Corriger adresse et GPS
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('index.html')
+          html = path.read_text(encoding='utf-8')
+
+          # 1) Corriger partout la graphie de l'adresse.
+          old_address = '3 rue Troubadour Cairel'
+          new_address = '3 rue du Troubadour Cairels'
+          if old_address not in html:
+              raise SystemExit('Adresse source introuvable')
+          html = html.replace(old_address, new_address)
+
+          # 2) Afficher les coordonnées GPS dans le bloc visible.
+          visible_anchor = '<p class="intro" style="margin-top:4px;">🏰 À environ 200 m du centre historique de Sarlat-la-Canéda.</p>'
+          gps_visible = visible_anchor + '\n                <p class="intro" style="margin-top:4px;">🧭 GPS : 44.888741, 1.213728</p>'
+          if '🧭 GPS : 44.888741, 1.213728' not in html:
+              if visible_anchor not in html:
+                  raise SystemExit('Ancre localisation visible introuvable')
+              html = html.replace(visible_anchor, gps_visible, 1)
+
+          # 3) Afficher les coordonnées GPS aussi dans les informations détaillées.
+          info_anchor = '<div class="item">📍 Adresse : 3 rue du Troubadour Cairels, 24200 Sarlat-la-Canéda, France</div>'
+          info_gps = info_anchor + '\n                        <div class="item">🧭 GPS : 44.888741, 1.213728</div>'
+          if '<div class="item">🧭 GPS : 44.888741, 1.213728</div>' not in html:
+              if info_anchor not in html:
+                  raise SystemExit('Ancre adresse détaillée introuvable')
+              html = html.replace(info_anchor, info_gps, 1)
+
+          # 4) Faire pointer le bouton visible directement sur les coordonnées.
+          import re
+          html, n = re.subn(
+              r'href="https://www\.google\.com/maps/search/\?api=1&query=[^"]+" target="_blank" rel="noopener">🗺️ Voir sur Google Maps</a>',
+              'href="https://www.google.com/maps/search/?api=1&query=44.888741%2C1.213728" target="_blank" rel="noopener">🗺️ Voir sur Google Maps</a>',
+              html,
+              count=1,
+          )
+          if n != 1:
+              raise SystemExit(f'Lien Maps visible non remplacé: {n}')
+
+          # 5) Enregistrer les coordonnées dans la configuration et utiliser le GPS pour le bouton bas.
+          cfg_anchor = 'address: "3 rue du Troubadour Cairels, 24200 Sarlat-la-Canéda, France",'
+          cfg_with_gps = cfg_anchor + '\n                lat: 44.888741,\n                lng: 1.213728,'
+          if 'lat: 44.888741' not in html:
+              if cfg_anchor not in html:
+                  raise SystemExit('Configuration adresse introuvable')
+              html = html.replace(cfg_anchor, cfg_with_gps, 1)
+
+          old_map = 'if (mapEl) mapEl.href = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(CFG.address);'
+          new_map = 'if (mapEl) mapEl.href = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(CFG.lat + "," + CFG.lng);'
+          if old_map not in html:
+              raise SystemExit('Code du bouton Maps bas introuvable')
+          html = html.replace(old_map, new_map, 1)
+
+          path.write_text(html, encoding='utf-8')
+          PY
+
+      - name: Publier uniquement la correction du Master et retirer le déclencheur temporaire
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git rm .github/workflows/fix-sarlat-gps-temp.yml
+          git commit -m "Corrige l’adresse Cairels et la géolocalisation GPS"
+          git push
