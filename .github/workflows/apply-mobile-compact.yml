@@ -1,12 +1,17 @@
-name: Correction temporaire calendrier Chez Baptiste
+name: Appliquer le mode mobile compact
 
 on:
   push:
     paths:
       - .github/workflows/apply-mobile-compact.yml
+  workflow_dispatch:
 
 permissions:
   contents: write
+
+concurrency:
+  group: sarlat-mobile-compact
+  cancel-in-progress: true
 
 jobs:
   patch-index:
@@ -16,97 +21,56 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Mettre le calendrier à jour
+      - name: Relier les assets mobiles
         shell: bash
         run: |
           python - <<'PY'
           from pathlib import Path
 
-          path = Path("index.html")
-          lines = path.read_text(encoding="utf-8").splitlines()
+          path = Path('index.html')
+          html = path.read_text(encoding='utf-8')
 
-          remove_labels = {"30 juillet 2026", "1 au 3 août 2026", "8 août 2026"}
-          out = []
-          inserted_19 = False
+          if 'name="digiy-build"' not in html:
+              html = html.replace(
+                  '<meta name="theme-color" content="#25190f">',
+                  '<meta name="theme-color" content="#25190f">\n    <meta name="digiy-build" content="sarlat-mobile-compact-20260802">',
+                  1,
+              )
+          elif 'sarlat-mobile-compact-20260802' not in html:
+              import re
+              html = re.sub(
+                  r'<meta name="digiy-build" content="[^"]*">',
+                  '<meta name="digiy-build" content="sarlat-mobile-compact-20260802">',
+                  html,
+                  count=1,
+              )
 
-          for line in lines:
-              if any(label in line for label in remove_labels):
-                  continue
-              if "<!-- disponibilités fixes -->" in line:
-                  line = line.replace("disponibilités fixes", "disponibilités à jour")
-              if "26 au 28 août 2026" in line and "class=\"period\"" in line:
-                  indent = line[:len(line) - len(line.lstrip())]
-                  out.append(indent + '<div class="period" data-end="2026-08-19"><span>19 août 2026</span><strong>Occupé</strong></div>')
-                  line = line.replace('class="period"', 'class="period" data-end="2026-08-28"', 1)
-                  inserted_19 = True
-              elif "15 et 16 septembre 2026" in line and 'class="period"' in line:
-                  line = line.replace('class="period"', 'class="period" data-end="2026-09-16"', 1)
-              elif "29 septembre 2026" in line and 'class="period"' in line:
-                  line = line.replace('class="period"', 'class="period" data-end="2026-09-29"', 1)
-              out.append(line)
+          if 'mobile-compact.css' not in html:
+              html = html.replace(
+                  '</head>',
+                  '    <link rel="stylesheet" href="./mobile-compact.css?v=20260802-1">\n</head>',
+                  1,
+              )
 
-          if not inserted_19:
-              raise SystemExit("Impossible d'ajouter le 19 août")
+          if 'mobile-compact.js' not in html:
+              html = html.replace(
+                  '</body>',
+                  '    <script src="./mobile-compact.js?v=20260802-1" defer></script>\n</body>',
+                  1,
+              )
 
-          lines = out
-          start = next((i for i, line in enumerate(lines) if "blockedDates: [" in line), None)
-          if start is None:
-              raise SystemExit("blockedDates introuvable")
-          end = next((i for i in range(start + 1, len(lines)) if lines[i].strip() == "]"), None)
-          if end is None:
-              raise SystemExit("Fin blockedDates introuvable")
-
-          indent = lines[start][:len(lines[start]) - len(lines[start].lstrip())]
-          dates = [
-              "2026-08-19",
-              "2026-08-26",
-              "2026-08-27",
-              "2026-08-28",
-              "2026-09-15",
-              "2026-09-16",
-              "2026-09-29",
-          ]
-          blocked = [indent + "blockedDates: ["]
-          blocked += [indent + '    "' + d + '",' for d in dates[:-1]]
-          blocked += [indent + '    "' + dates[-1] + '"', indent + "]"]
-          lines[start:end + 1] = blocked
-
-          marker = next((i for i, line in enumerate(lines) if "// ===== WHATSAPP LINKS =====" in line), None)
-          if marker is None:
-              raise SystemExit("Ancre WhatsApp introuvable")
-
-          if not any("cleanPastAvailability" in line for line in lines):
-              js_indent = lines[marker][:len(lines[marker]) - len(lines[marker].lstrip())]
-              cleanup = [
-                  js_indent + "// Nettoyage automatique des indisponibilités passées.",
-                  js_indent + "(function cleanPastAvailability() {",
-                  js_indent + "    const now = new Date();",
-                  js_indent + '    const todayISO = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");',
-                  js_indent + "    CFG.blockedDates = CFG.blockedDates.filter(date => date >= todayISO);",
-                  js_indent + '    document.querySelectorAll(".availability .period[data-end]").forEach(row => {',
-                  js_indent + "        if (row.dataset.end < todayISO) row.remove();",
-                  js_indent + "    });",
-                  js_indent + "})();",
-                  "",
-              ]
-              lines[marker:marker] = cleanup
-
-          text = "\n".join(lines) + "\n"
-          for stale in ("2026-07-30", "2026-08-01", "2026-08-02", "2026-08-03", "2026-08-08"):
-              if stale in text:
-                  raise SystemExit("Ancienne date technique encore présente: " + stale)
-          if "19 août 2026" not in text or '"2026-08-19"' not in text:
-              raise SystemExit("Le 19 août occupé n'a pas été posé")
-
-          path.write_text(text, encoding="utf-8")
+          path.write_text(html, encoding='utf-8')
           PY
 
-      - name: Publier et restaurer le workflow original
+      - name: Publier la liaison
         shell: bash
         run: |
+          if git diff --quiet -- index.html; then
+            echo "index.html déjà relié"
+            exit 0
+          fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git show e62cbc5976b1db03f166f43d9ae94de5a1c5037e:.github/workflows/apply-mobile-compact.yml > .github/workflows/apply-mobile-compact.yml
-          git add index.html .github/workflows/apply-mobile-compact.yml
-          git commit -m "Met à jour les indisponibilités du calendrier"
+          git add index.html
+          git commit -m "Activer la navigation mobile compacte"
           git push
