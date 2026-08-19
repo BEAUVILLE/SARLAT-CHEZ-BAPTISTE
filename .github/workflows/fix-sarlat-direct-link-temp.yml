@@ -1,0 +1,70 @@
+name: Lien direct DIGIYLYFE Chez Baptiste
+
+on:
+  push:
+    paths:
+      - .github/workflows/fix-sarlat-direct-link-temp.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sarlat-direct-link-fix
+  cancel-in-progress: false
+
+jobs:
+  patch-index:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Faire pointer la localisation vers DIGIYLYFE
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('index.html')
+          html = path.read_text(encoding='utf-8')
+          direct = 'https://sarlat-chez-baptiste.digiylyfe.com/'
+
+          old_address = '<p style="margin-top:8px;font-weight:1000;">📍 3 rue du Troubadour Cairels · 24200 Sarlat-la-Canéda</p>'
+          new_address = '<p style="margin-top:8px;font-weight:1000;"><a href="' + direct + '" aria-label="Ouvrir la fiche directe SARLAT CHEZ BAPTISTE">📍 3 rue du Troubadour Cairels · 24200 Sarlat-la-Canéda</a></p>'
+          if old_address not in html:
+              raise SystemExit('Adresse visible source introuvable')
+          html = html.replace(old_address, new_address, 1)
+
+          old_maps = '<a class="btn btn-light" href="https://www.google.com/maps/search/?api=1&query=Chez%20Baptiste%2C%203%20Rue%20du%20Troubadour%20Cairels%2C%2024200%20Sarlat-la-Can%C3%A9da%2C%20France" target="_blank" rel="noopener">🗺️ Voir sur Google Maps</a>'
+          new_direct = '<a class="btn btn-light" href="' + direct + '">🔗 Voir la fiche DIGIYLYFE</a>'
+          if old_maps not in html:
+              raise SystemExit('Bouton Google Maps visible introuvable')
+          html = html.replace(old_maps, new_direct, 1)
+
+          old_bottom = '<a class="btn btn-light" id="map" href="#" target="_blank" rel="noopener">Voir l\'adresse</a>'
+          new_bottom = '<a class="btn btn-light" href="' + direct + '">Voir la fiche DIGIYLYFE</a>'
+          if old_bottom not in html:
+              raise SystemExit('Bouton bas adresse introuvable')
+          html = html.replace(old_bottom, new_bottom, 1)
+
+          old_js = '            const mapEl = document.getElementById("map");\n            if (mapEl) mapEl.href = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent("Chez Baptiste, " + CFG.address);\n'
+          if old_js not in html:
+              raise SystemExit('Code Maps dynamique introuvable')
+          html = html.replace(old_js, '', 1)
+
+          if 'google.com/maps' in html or 'id="map"' in html:
+              raise SystemExit('Une sortie Google Maps subsiste')
+
+          path.write_text(html, encoding='utf-8')
+          PY
+
+      - name: Publier uniquement index.html et nettoyer le déclencheur
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git rm .github/workflows/fix-sarlat-direct-link-temp.yml
+          git commit -m "Fait pointer la localisation vers DIGIYLYFE"
+          git push
