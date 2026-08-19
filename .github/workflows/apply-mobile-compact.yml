@@ -29,48 +29,45 @@ jobs:
           path = Path('index.html')
           html = path.read_text(encoding='utf-8')
 
-          old_availability = '''                <!-- disponibilités fixes -->
-                <div class="availability">
-                    <div class="period"><span>30 juillet 2026</span><strong>Occupé</strong></div>
-                    <div class="period"><span>1 au 3 août 2026</span><strong>Occupé</strong></div>
-                    <div class="period"><span>8 août 2026</span><strong>Occupé</strong></div>
-                    <div class="period"><span>26 au 28 août 2026</span><strong>Occupé</strong></div>
-                    <div class="period"><span>15 et 16 septembre 2026</span><strong>Occupé</strong></div>
-                    <div class="period"><span>29 septembre 2026</span><strong>Occupé</strong></div>
-                    <div class="period open"><span>Autres dates jusqu'au 30 octobre 2026</span><strong>Sur demande</strong></div>
-                    <div class="period"><span>À partir du 31 octobre 2026</span><strong>Fermé</strong></div>
-                </div>'''
+          # Retirer les anciennes périodes visibles, sans dépendre de l'indentation.
+          for old in (
+              '<div class="period"><span>30 juillet 2026</span><strong>Occupé</strong></div>',
+              '<div class="period"><span>1 au 3 août 2026</span><strong>Occupé</strong></div>',
+              '<div class="period"><span>8 août 2026</span><strong>Occupé</strong></div>',
+          ):
+              if old not in html:
+                  raise SystemExit('Ancienne période visible introuvable: ' + old)
+              html = html.replace(old, '', 1)
 
-          new_availability = '''                <!-- disponibilités à jour -->
-                <div class="availability">
-                    <div class="period" data-end="2026-08-19"><span>19 août 2026</span><strong>Occupé</strong></div>
-                    <div class="period" data-end="2026-08-28"><span>26 au 28 août 2026</span><strong>Occupé</strong></div>
-                    <div class="period" data-end="2026-09-16"><span>15 et 16 septembre 2026</span><strong>Occupé</strong></div>
-                    <div class="period" data-end="2026-09-29"><span>29 septembre 2026</span><strong>Occupé</strong></div>
-                    <div class="period open"><span>Autres dates jusqu'au 30 octobre 2026</span><strong>Sur demande</strong></div>
-                    <div class="period"><span>À partir du 31 octobre 2026</span><strong>Fermé</strong></div>
-                </div>'''
+          # Ajouter le 19 août et dater les périodes futures pour le nettoyage automatique.
+          target_26 = '<div class="period"><span>26 au 28 août 2026</span><strong>Occupé</strong></div>'
+          replacement_26 = '<div class="period" data-end="2026-08-19"><span>19 août 2026</span><strong>Occupé</strong></div>\n                    <div class="period" data-end="2026-08-28"><span>26 au 28 août 2026</span><strong>Occupé</strong></div>'
+          if target_26 not in html:
+              raise SystemExit('Période 26-28 août introuvable')
+          html = html.replace(target_26, replacement_26, 1)
 
-          if old_availability not in html:
-              raise SystemExit('Bloc disponibilités source introuvable')
-          html = html.replace(old_availability, new_availability, 1)
+          target_sep = '<div class="period"><span>15 et 16 septembre 2026</span><strong>Occupé</strong></div>'
+          replacement_sep = '<div class="period" data-end="2026-09-16"><span>15 et 16 septembre 2026</span><strong>Occupé</strong></div>'
+          if target_sep not in html:
+              raise SystemExit('Période 15-16 septembre introuvable')
+          html = html.replace(target_sep, replacement_sep, 1)
 
-          old_blocked = '''                blockedDates: [
-                    "2026-07-30",
-                    "2026-08-01",
-                    "2026-08-02",
-                    "2026-08-03",
-                    "2026-08-08",
-                    "2026-08-26",
-                    "2026-08-27",
-                    "2026-08-28",
-                    "2026-09-15",
-                    "2026-09-16",
-                    "2026-09-29"
-                ]
-            };'''
+          target_29 = '<div class="period"><span>29 septembre 2026</span><strong>Occupé</strong></div>'
+          replacement_29 = '<div class="period" data-end="2026-09-29"><span>29 septembre 2026</span><strong>Occupé</strong></div>'
+          if target_29 not in html:
+              raise SystemExit('Période 29 septembre introuvable')
+          html = html.replace(target_29, replacement_29, 1)
 
-          new_blocked = '''                blockedDates: [
+          html = html.replace('<!-- disponibilités fixes -->', '<!-- disponibilités à jour -->', 1)
+
+          # Remplacer intégralement la liste technique des dates occupées.
+          start = html.find('blockedDates: [')
+          if start == -1:
+              raise SystemExit('blockedDates introuvable')
+          end = html.find(']', start)
+          if end == -1:
+              raise SystemExit('Fin blockedDates introuvable')
+          new_blocked = '''blockedDates: [
                     "2026-08-19",
                     "2026-08-26",
                     "2026-08-27",
@@ -78,10 +75,12 @@ jobs:
                     "2026-09-15",
                     "2026-09-16",
                     "2026-09-29"
-                ]
-            };
+                ]'''
+          html = html[:start] + new_blocked + html[end + 1:]
 
-            // Nettoyage automatique des indisponibilités passées.
+          # Les indisponibilités expirées disparaissent automatiquement à l'ouverture de la fiche.
+          marker = '            // ===== WHATSAPP LINKS ====='
+          cleanup = '''            // Nettoyage automatique des indisponibilités passées.
             (function cleanPastAvailability() {
                 const now = new Date();
                 const todayISO = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
@@ -89,16 +88,19 @@ jobs:
                 document.querySelectorAll(".availability .period[data-end]").forEach(row => {
                     if (row.dataset.end < todayISO) row.remove();
                 });
-            })();'''
+            })();
 
-          if old_blocked not in html:
-              raise SystemExit('Liste blockedDates source introuvable')
-          html = html.replace(old_blocked, new_blocked, 1)
+'''
+          if marker not in html:
+              raise SystemExit('Ancre WhatsApp introuvable')
+          if 'cleanPastAvailability' not in html:
+              html = html.replace(marker, cleanup + marker, 1)
 
+          # Garde-fous.
           for stale in ('2026-07-30', '2026-08-01', '2026-08-02', '2026-08-03', '2026-08-08'):
               if stale in html:
-                  raise SystemExit(f'Ancienne date encore présente: {stale}')
-          if '2026-08-19' not in html or '19 août 2026' not in html:
+                  raise SystemExit('Ancienne date technique encore présente: ' + stale)
+          if '19 août 2026' not in html or '"2026-08-19"' not in html:
               raise SystemExit('Le 19 août occupé n’a pas été posé')
 
           path.write_text(html, encoding='utf-8')
@@ -109,7 +111,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git show HEAD^:.github/workflows/apply-mobile-compact.yml > .github/workflows/apply-mobile-compact.yml
+          git show 8b6d7d6a51e511209552a8657d54741cf0e30761:.github/workflows/apply-mobile-compact.yml > .github/workflows/apply-mobile-compact.yml
           if [ -f .github/workflows/fix-sarlat-calendar-temp.yml ]; then
             git rm .github/workflows/fix-sarlat-calendar-temp.yml
           fi
