@@ -1,3 +1,4 @@
+# Déclenchement final validé
 name: Correction temporaire calendrier Chez Baptiste
 
 on:
@@ -29,7 +30,6 @@ jobs:
           path = Path('index.html')
           html = path.read_text(encoding='utf-8')
 
-          # Retirer les anciennes périodes visibles, sans dépendre de l'indentation.
           for old in (
               '<div class="period"><span>30 juillet 2026</span><strong>Occupé</strong></div>',
               '<div class="period"><span>1 au 3 août 2026</span><strong>Occupé</strong></div>',
@@ -39,7 +39,6 @@ jobs:
                   raise SystemExit('Ancienne période visible introuvable: ' + old)
               html = html.replace(old, '', 1)
 
-          # Ajouter le 19 août et dater les périodes futures pour le nettoyage automatique.
           target_26 = '<div class="period"><span>26 au 28 août 2026</span><strong>Occupé</strong></div>'
           replacement_26 = '<div class="period" data-end="2026-08-19"><span>19 août 2026</span><strong>Occupé</strong></div>\n                    <div class="period" data-end="2026-08-28"><span>26 au 28 août 2026</span><strong>Occupé</strong></div>'
           if target_26 not in html:
@@ -60,7 +59,6 @@ jobs:
 
           html = html.replace('<!-- disponibilités fixes -->', '<!-- disponibilités à jour -->', 1)
 
-          # Remplacer intégralement la liste technique des dates occupées.
           start = html.find('blockedDates: [')
           if start == -1:
               raise SystemExit('blockedDates introuvable')
@@ -78,7 +76,6 @@ jobs:
                 ]'''
           html = html[:start] + new_blocked + html[end + 1:]
 
-          # Les indisponibilités expirées disparaissent automatiquement à l'ouverture de la fiche.
           marker = '            // ===== WHATSAPP LINKS ====='
           cleanup = '''            // Nettoyage automatique des indisponibilités passées.
             (function cleanPastAvailability() {
@@ -96,7 +93,6 @@ jobs:
           if 'cleanPastAvailability' not in html:
               html = html.replace(marker, cleanup + marker, 1)
 
-          # Garde-fous.
           for stale in ('2026-07-30', '2026-08-01', '2026-08-02', '2026-08-03', '2026-08-08'):
               if stale in html:
                   raise SystemExit('Ancienne date technique encore présente: ' + stale)
