@@ -1,4 +1,3 @@
-# Déclenchement final validé
 name: Correction temporaire calendrier Chez Baptiste
 
 on:
@@ -8,10 +7,6 @@ on:
 
 permissions:
   contents: write
-
-concurrency:
-  group: sarlat-calendar-final
-  cancel-in-progress: false
 
 jobs:
   patch-index:
@@ -27,79 +22,83 @@ jobs:
           python - <<'PY'
           from pathlib import Path
 
-          path = Path('index.html')
-          html = path.read_text(encoding='utf-8')
+          path = Path("index.html")
+          lines = path.read_text(encoding="utf-8").splitlines()
 
-          for old in (
-              '<div class="period"><span>30 juillet 2026</span><strong>Occupé</strong></div>',
-              '<div class="period"><span>1 au 3 août 2026</span><strong>Occupé</strong></div>',
-              '<div class="period"><span>8 août 2026</span><strong>Occupé</strong></div>',
-          ):
-              if old not in html:
-                  raise SystemExit('Ancienne période visible introuvable: ' + old)
-              html = html.replace(old, '', 1)
+          remove_labels = {"30 juillet 2026", "1 au 3 août 2026", "8 août 2026"}
+          out = []
+          inserted_19 = False
 
-          target_26 = '<div class="period"><span>26 au 28 août 2026</span><strong>Occupé</strong></div>'
-          replacement_26 = '<div class="period" data-end="2026-08-19"><span>19 août 2026</span><strong>Occupé</strong></div>\n                    <div class="period" data-end="2026-08-28"><span>26 au 28 août 2026</span><strong>Occupé</strong></div>'
-          if target_26 not in html:
-              raise SystemExit('Période 26-28 août introuvable')
-          html = html.replace(target_26, replacement_26, 1)
+          for line in lines:
+              if any(label in line for label in remove_labels):
+                  continue
+              if "<!-- disponibilités fixes -->" in line:
+                  line = line.replace("disponibilités fixes", "disponibilités à jour")
+              if "26 au 28 août 2026" in line and "class=\"period\"" in line:
+                  indent = line[:len(line) - len(line.lstrip())]
+                  out.append(indent + '<div class="period" data-end="2026-08-19"><span>19 août 2026</span><strong>Occupé</strong></div>')
+                  line = line.replace('class="period"', 'class="period" data-end="2026-08-28"', 1)
+                  inserted_19 = True
+              elif "15 et 16 septembre 2026" in line and 'class="period"' in line:
+                  line = line.replace('class="period"', 'class="period" data-end="2026-09-16"', 1)
+              elif "29 septembre 2026" in line and 'class="period"' in line:
+                  line = line.replace('class="period"', 'class="period" data-end="2026-09-29"', 1)
+              out.append(line)
 
-          target_sep = '<div class="period"><span>15 et 16 septembre 2026</span><strong>Occupé</strong></div>'
-          replacement_sep = '<div class="period" data-end="2026-09-16"><span>15 et 16 septembre 2026</span><strong>Occupé</strong></div>'
-          if target_sep not in html:
-              raise SystemExit('Période 15-16 septembre introuvable')
-          html = html.replace(target_sep, replacement_sep, 1)
+          if not inserted_19:
+              raise SystemExit("Impossible d'ajouter le 19 août")
 
-          target_29 = '<div class="period"><span>29 septembre 2026</span><strong>Occupé</strong></div>'
-          replacement_29 = '<div class="period" data-end="2026-09-29"><span>29 septembre 2026</span><strong>Occupé</strong></div>'
-          if target_29 not in html:
-              raise SystemExit('Période 29 septembre introuvable')
-          html = html.replace(target_29, replacement_29, 1)
+          lines = out
+          start = next((i for i, line in enumerate(lines) if "blockedDates: [" in line), None)
+          if start is None:
+              raise SystemExit("blockedDates introuvable")
+          end = next((i for i in range(start + 1, len(lines)) if lines[i].strip() == "]"), None)
+          if end is None:
+              raise SystemExit("Fin blockedDates introuvable")
 
-          html = html.replace('<!-- disponibilités fixes -->', '<!-- disponibilités à jour -->', 1)
+          indent = lines[start][:len(lines[start]) - len(lines[start].lstrip())]
+          dates = [
+              "2026-08-19",
+              "2026-08-26",
+              "2026-08-27",
+              "2026-08-28",
+              "2026-09-15",
+              "2026-09-16",
+              "2026-09-29",
+          ]
+          blocked = [indent + "blockedDates: ["]
+          blocked += [indent + '    "' + d + '",' for d in dates[:-1]]
+          blocked += [indent + '    "' + dates[-1] + '"', indent + "]"]
+          lines[start:end + 1] = blocked
 
-          start = html.find('blockedDates: [')
-          if start == -1:
-              raise SystemExit('blockedDates introuvable')
-          end = html.find(']', start)
-          if end == -1:
-              raise SystemExit('Fin blockedDates introuvable')
-          new_blocked = '''blockedDates: [
-                    "2026-08-19",
-                    "2026-08-26",
-                    "2026-08-27",
-                    "2026-08-28",
-                    "2026-09-15",
-                    "2026-09-16",
-                    "2026-09-29"
-                ]'''
-          html = html[:start] + new_blocked + html[end + 1:]
+          marker = next((i for i, line in enumerate(lines) if "// ===== WHATSAPP LINKS =====" in line), None)
+          if marker is None:
+              raise SystemExit("Ancre WhatsApp introuvable")
 
-          marker = '            // ===== WHATSAPP LINKS ====='
-          cleanup = '''            // Nettoyage automatique des indisponibilités passées.
-            (function cleanPastAvailability() {
-                const now = new Date();
-                const todayISO = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
-                CFG.blockedDates = CFG.blockedDates.filter(date => date >= todayISO);
-                document.querySelectorAll(".availability .period[data-end]").forEach(row => {
-                    if (row.dataset.end < todayISO) row.remove();
-                });
-            })();
+          if not any("cleanPastAvailability" in line for line in lines):
+              js_indent = lines[marker][:len(lines[marker]) - len(lines[marker].lstrip())]
+              cleanup = [
+                  js_indent + "// Nettoyage automatique des indisponibilités passées.",
+                  js_indent + "(function cleanPastAvailability() {",
+                  js_indent + "    const now = new Date();",
+                  js_indent + '    const todayISO = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");',
+                  js_indent + "    CFG.blockedDates = CFG.blockedDates.filter(date => date >= todayISO);",
+                  js_indent + '    document.querySelectorAll(".availability .period[data-end]").forEach(row => {',
+                  js_indent + "        if (row.dataset.end < todayISO) row.remove();",
+                  js_indent + "    });",
+                  js_indent + "})();",
+                  "",
+              ]
+              lines[marker:marker] = cleanup
 
-            '''
-          if marker not in html:
-              raise SystemExit('Ancre WhatsApp introuvable')
-          if 'cleanPastAvailability' not in html:
-              html = html.replace(marker, cleanup + marker, 1)
+          text = "\n".join(lines) + "\n"
+          for stale in ("2026-07-30", "2026-08-01", "2026-08-02", "2026-08-03", "2026-08-08"):
+              if stale in text:
+                  raise SystemExit("Ancienne date technique encore présente: " + stale)
+          if "19 août 2026" not in text or '"2026-08-19"' not in text:
+              raise SystemExit("Le 19 août occupé n'a pas été posé")
 
-          for stale in ('2026-07-30', '2026-08-01', '2026-08-02', '2026-08-03', '2026-08-08'):
-              if stale in html:
-                  raise SystemExit('Ancienne date technique encore présente: ' + stale)
-          if '19 août 2026' not in html or '"2026-08-19"' not in html:
-              raise SystemExit('Le 19 août occupé n’a pas été posé')
-
-          path.write_text(html, encoding='utf-8')
+          path.write_text(text, encoding="utf-8")
           PY
 
       - name: Publier et restaurer les fichiers techniques
