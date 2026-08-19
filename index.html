@@ -7,6 +7,12 @@
     <meta name="description" content="Chambre privée chez l’habitant à Sarlat-la-Canéda. Calendrier, demande directe, arrivée autonome, paiement Sendwave.">
     <meta name="robots" content="index,follow">
     <meta name="theme-color" content="#25190f">
+    <meta name="application-name" content="SARLAT CHEZ BAPTISTE">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Chez Baptiste">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="pwa-icon-192.png">
     <meta name="digiy-build" content="sarlat-mobile-compact-20260802">
     <link rel="canonical" href="https://sarlat-chez-baptiste.digiylyfe.com/">
     <meta property="og:type" content="website">
@@ -978,6 +984,22 @@
             font-size: 11px;
             font-weight: 800;
         }
+        .brand-philosophy {
+            display: inline-block;
+            margin-top: 8px;
+            color: #25190f;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 12px;
+            font-weight: 900;
+            letter-spacing: .055em;
+        }
+        .brand-human {
+            display: inline-block;
+            margin-top: 3px;
+            color: #8a6d50;
+            font-size: 10px;
+            font-weight: 750;
+        }
 
         /* ===== RESPONSIVE ===== */
         @media (max-width: 850px) {
@@ -1267,7 +1289,6 @@
         }
 
     </style>
-    <link rel="stylesheet" href="./mobile-compact.css?v=20260802-1">
 </head>
 <body>
 
@@ -1277,10 +1298,7 @@
                 SARLAT CHEZ BAPTISTE
                 <small>Chambre privée chez l'habitant</small>
             </div>
-            <div class="actions" style="margin-top:0;">
-      <a class="back" href="https://digiylyfe.com/sarlat.html">← Découvrir Sarlat</a>
-      <a class="back" href="./gestion.html" rel="nofollow">🔐 Accès propriétaire</a>
-  </div>
+            <a class="back" href="https://digiylyfe.com/sarlat.html">← Découvrir Sarlat</a>
         </header>
 
         <main>
@@ -1300,16 +1318,6 @@
                         <a class="btn btn-primary" href="#reservation">Faire une demande directe →</a>
                         <a class="btn btn-contact" id="waTop" href="#" target="_blank" rel="noopener">Écrire sur WhatsApp</a>
                     </div>
-                </div>
-            </section>
-
-            <!-- ===== LOCALISATION VISIBLE ===== -->
-            <section class="section" aria-label="Localisation" style="margin-top:12px;padding:16px 18px;">
-                <span class="eyebrow">Localisation</span>
-                <p style="margin-top:8px;font-weight:1000;"><a href="https://sarlat-chez-baptiste.digiylyfe.com/" aria-label="Ouvrir la fiche directe SARLAT CHEZ BAPTISTE">📍 3 rue du Troubadour Cairels · 24200 Sarlat-la-Canéda</a></p>
-                <p class="intro" style="margin-top:4px;">🏰 À environ 200 m du centre historique de Sarlat-la-Canéda.</p>
-                <div class="actions" style="margin-top:10px;">
-                    <a class="btn btn-light" href="https://sarlat-chez-baptiste.digiylyfe.com/">🔗 Voir la fiche DIGIYLYFE</a>
                 </div>
             </section>
 
@@ -1334,10 +1342,6 @@
                         <div class="item">✓ Cuisine équipée accessible</div>
                         <div class="item">✓ Salle à manger partagée</div>
                         <div class="item">✓ Wi-Fi gratuit</div>
-                        <div class="item">📍 Adresse : 3 rue du Troubadour Cairels, 24200 Sarlat-la-Canéda, France</div>
-                        <div class="item">✓ À environ 200 m du centre historique de Sarlat-la-Canéda</div>
-                        <div class="item">✓ Stationnement : 2 parkings gratuits rue Louis Blanc à environ 50 m de la maison</div>
-                        <div class="item">✓ 3 places de stationnement dans la rue, selon disponibilité</div>
                         <div class="item">✓ Arrivée autonome 16 h → 22 h</div>
                         <div class="item">✓ Départ 8 h → 10 h</div>
                     </div>
@@ -1489,7 +1493,7 @@
                         <a class="btn btn-primary" href="#reservation">Choisir mes dates →</a>
                         <a class="btn btn-contact" id="waBottom" href="#" target="_blank" rel="noopener">Écrire à Baptiste</a>
                         <a class="btn btn-light" href="mailto:baptistejb24@gmail.com">Envoyer un email</a>
-                        <a class="btn btn-light" href="https://sarlat-chez-baptiste.digiylyfe.com/">Voir la fiche DIGIYLYFE</a>
+                        <a class="btn btn-light" id="map" href="#" target="_blank" rel="noopener">Voir l'adresse</a>
                     </div>
                 </div>
                 <aside class="official-card official-card-duo">
@@ -1520,7 +1524,9 @@
 
             <footer class="footer">
                 <strong>DIGIYLYFE ∞ SARLAT CHEZ BAPTISTE</strong><br>
-                Réservation directe · Paiement direct · 0 % de commission
+                Réservation directe · Paiement direct · 0 % de commission<br>
+                <span class="brand-philosophy">LE SAVOIR-FAIRE POUR LE SAVOIR-ÊTRE.</span><br>
+                <span class="brand-human">La technologie au service de l’humain.</span>
             </footer>
 
         </main>
@@ -1565,6 +1571,8 @@
                 const el = document.getElementById(id);
                 if (el) el.href = waUrl;
             });
+            const mapEl = document.getElementById("map");
+            if (mapEl) mapEl.href = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(CFG.address);
 
             // ===== SLIDESHOW =====
             (function initSlider() {
@@ -2046,9 +2054,18 @@
         })();
     </script>
 
-    <script src="./mobile-compact.js?v=20260802-1" defer></script>
+
+    <script>
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", function () {
+                navigator.serviceWorker.register("./sw.js").catch(function () {});
+            });
+        }
+    </script>
 </body>
 </html>
+
+
 
 
 
