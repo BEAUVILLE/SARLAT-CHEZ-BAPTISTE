@@ -1,0 +1,116 @@
+name: Mise à jour temporaire calendrier Chez Baptiste
+
+on:
+  push:
+    paths:
+      - .github/workflows/fix-sarlat-calendar-temp.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sarlat-calendar-fix
+  cancel-in-progress: false
+
+jobs:
+  patch-index:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Nettoyer les dates passées et ajouter le 19 août occupé
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('index.html')
+          html = path.read_text(encoding='utf-8')
+
+          old_availability = '''                <!-- disponibilités fixes -->
+                <div class="availability">
+                    <div class="period"><span>30 juillet 2026</span><strong>Occupé</strong></div>
+                    <div class="period"><span>1 au 3 août 2026</span><strong>Occupé</strong></div>
+                    <div class="period"><span>8 août 2026</span><strong>Occupé</strong></div>
+                    <div class="period"><span>26 au 28 août 2026</span><strong>Occupé</strong></div>
+                    <div class="period"><span>15 et 16 septembre 2026</span><strong>Occupé</strong></div>
+                    <div class="period"><span>29 septembre 2026</span><strong>Occupé</strong></div>
+                    <div class="period open"><span>Autres dates jusqu'au 30 octobre 2026</span><strong>Sur demande</strong></div>
+                    <div class="period"><span>À partir du 31 octobre 2026</span><strong>Fermé</strong></div>
+                </div>'''
+
+          new_availability = '''                <!-- disponibilités à jour -->
+                <div class="availability">
+                    <div class="period" data-end="2026-08-19"><span>19 août 2026</span><strong>Occupé</strong></div>
+                    <div class="period" data-end="2026-08-28"><span>26 au 28 août 2026</span><strong>Occupé</strong></div>
+                    <div class="period" data-end="2026-09-16"><span>15 et 16 septembre 2026</span><strong>Occupé</strong></div>
+                    <div class="period" data-end="2026-09-29"><span>29 septembre 2026</span><strong>Occupé</strong></div>
+                    <div class="period open"><span>Autres dates jusqu'au 30 octobre 2026</span><strong>Sur demande</strong></div>
+                    <div class="period"><span>À partir du 31 octobre 2026</span><strong>Fermé</strong></div>
+                </div>'''
+
+          if old_availability not in html:
+              raise SystemExit('Bloc disponibilités source introuvable')
+          html = html.replace(old_availability, new_availability, 1)
+
+          old_blocked = '''                blockedDates: [
+                    "2026-07-30",
+                    "2026-08-01",
+                    "2026-08-02",
+                    "2026-08-03",
+                    "2026-08-08",
+                    "2026-08-26",
+                    "2026-08-27",
+                    "2026-08-28",
+                    "2026-09-15",
+                    "2026-09-16",
+                    "2026-09-29"
+                ]
+            };'''
+
+          new_blocked = '''                blockedDates: [
+                    "2026-08-19",
+                    "2026-08-26",
+                    "2026-08-27",
+                    "2026-08-28",
+                    "2026-09-15",
+                    "2026-09-16",
+                    "2026-09-29"
+                ]
+            };
+
+            // Nettoyage automatique des indisponibilités passées.
+            (function cleanPastAvailability() {
+                const now = new Date();
+                const todayISO = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
+                CFG.blockedDates = CFG.blockedDates.filter(date => date >= todayISO);
+                document.querySelectorAll(".availability .period[data-end]").forEach(row => {
+                    if (row.dataset.end < todayISO) row.remove();
+                });
+            })();'''
+
+          if old_blocked not in html:
+              raise SystemExit('Liste blockedDates source introuvable')
+          html = html.replace(old_blocked, new_blocked, 1)
+
+          # Garde-fous : les anciennes dates ne doivent plus rester dans la liste technique.
+          for stale in ('2026-07-30', '2026-08-01', '2026-08-02', '2026-08-03', '2026-08-08'):
+              if stale in html:
+                  raise SystemExit(f'Ancienne date encore présente: {stale}')
+          if '2026-08-19' not in html or '19 août 2026' not in html:
+              raise SystemExit('Le 19 août occupé n’a pas été posé')
+
+          path.write_text(html, encoding='utf-8')
+          PY
+
+      - name: Publier uniquement index.html et retirer le déclencheur temporaire
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git rm .github/workflows/fix-sarlat-calendar-temp.yml
+          git commit -m "Met à jour les indisponibilités du calendrier"
+          git push
