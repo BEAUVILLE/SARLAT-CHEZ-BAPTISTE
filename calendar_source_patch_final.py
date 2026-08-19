@@ -1,3 +1,4 @@
+# Déclenchement séparé confirmé 2026-08-19
 from pathlib import Path
 import re
 
