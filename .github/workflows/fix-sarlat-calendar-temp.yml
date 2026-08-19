@@ -1,5 +1,6 @@
 name: Mise à jour temporaire calendrier Chez Baptiste
 
+# Relance contrôlée
 on:
   push:
     paths:
@@ -95,7 +96,6 @@ jobs:
               raise SystemExit('Liste blockedDates source introuvable')
           html = html.replace(old_blocked, new_blocked, 1)
 
-          # Garde-fous : les anciennes dates ne doivent plus rester dans la liste technique.
           for stale in ('2026-07-30', '2026-08-01', '2026-08-02', '2026-08-03', '2026-08-08'):
               if stale in html:
                   raise SystemExit(f'Ancienne date encore présente: {stale}')
