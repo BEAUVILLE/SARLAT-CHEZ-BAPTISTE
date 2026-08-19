@@ -1,0 +1,29 @@
+name: Correctif final calendrier Chez Baptiste
+
+on:
+  push:
+    paths:
+      - calendar-trigger.txt
+
+permissions:
+  contents: write
+
+jobs:
+  patch-index:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Appliquer le calendrier validé
+        run: python calendar_patch_20260819.py
+
+      - name: Publier index.html uniquement
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Met à jour les indisponibilités du calendrier"
+          git push
