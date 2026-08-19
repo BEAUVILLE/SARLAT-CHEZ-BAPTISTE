@@ -364,6 +364,176 @@
             object-fit: cover;
             display: block;
         }
+        .slider-slide.promo-slide {
+            background: #25190f;
+            overflow: hidden;
+        }
+        .promo-bg {
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center;
+            transform: scale(1.02);
+        }
+        .promo-bg::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(24,16,10,.34), rgba(24,16,10,.9));
+        }
+        .promo-content {
+            position: relative;
+            z-index: 2;
+            height: 100%;
+            display: grid;
+            grid-template-columns: minmax(0,1fr) minmax(150px,220px);
+            align-items: center;
+            gap: clamp(16px,4vw,36px);
+            padding: clamp(24px,5vw,54px);
+            color: #fff;
+        }
+        .promo-copy {
+            max-width: 620px;
+        }
+        .promo-kicker {
+            display: inline-block;
+            padding: 7px 12px;
+            border: 1px solid rgba(255,228,167,.65);
+            border-radius: 999px;
+            background: rgba(23,16,11,.62);
+            color: #fff1cb;
+            font-size: 11px;
+            font-weight: 1000;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+        }
+        .promo-copy h3 {
+            margin: 14px 0 8px;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: clamp(30px,6vw,62px);
+            line-height: .92;
+            letter-spacing: -.035em;
+        }
+        .promo-copy h3 span {
+            display: block;
+            color: #f4d99a;
+            font-weight: 400;
+        }
+        .promo-copy p {
+            max-width: 560px;
+            font-weight: 850;
+            line-height: 1.45;
+            font-size: clamp(13px,2vw,17px);
+        }
+        .promo-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 9px;
+            margin-top: 16px;
+        }
+        .promo-actions a,
+        .promo-actions button {
+            min-height: 44px;
+            border: 0;
+            border-radius: 999px;
+            padding: 10px 16px;
+            font: inherit;
+            font-weight: 1000;
+            cursor: pointer;
+        }
+        .promo-actions a {
+            background: linear-gradient(135deg,#fff0b8,#c99743,#70a77c);
+            color: #21150c;
+        }
+        .promo-actions button {
+            background: rgba(255,255,255,.94);
+            color: #25190f;
+        }
+        .promo-share-status {
+            display: block;
+            margin-top: 8px;
+            min-height: 18px;
+            font-size: 11px;
+            font-weight: 900;
+            color: #fff1cb;
+        }
+        .promo-qr-wrap {
+            display: grid;
+            place-items: center;
+            gap: 8px;
+            align-self: center;
+        }
+        .promo-qr-duo {
+            grid-template-columns: repeat(2, minmax(120px, 1fr));
+            align-items: start;
+            width: min(100%, 470px);
+        }
+        .promo-qr-item {
+            display: grid;
+            place-items: center;
+            gap: 6px;
+            text-align: center;
+        }
+        .promo-qr-item small {
+            color: #fff1cb;
+            font-size: 10px;
+            font-weight: 850;
+            line-height: 1.25;
+        }
+        .promo-qr-link {
+            display: block;
+            width: min(100%, 220px);
+            padding: 10px;
+            border-radius: 20px;
+            background: #fff;
+            box-shadow: 0 18px 40px rgba(0,0,0,.34);
+            transition: transform .18s;
+        }
+        .promo-qr-link:hover {
+            transform: scale(1.025);
+        }
+        .promo-qr-link img {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+        }
+        .promo-qr-label {
+            text-align: center;
+            font-size: 11px;
+            font-weight: 1000;
+            color: #fff;
+        }
+        @media (max-width: 680px) {
+            .promo-content {
+                grid-template-columns: 1fr;
+                align-content: center;
+                text-align: center;
+                padding: 22px 20px 58px;
+            }
+            .promo-copy {
+                margin: auto;
+            }
+            .promo-kicker {
+                margin: auto;
+            }
+            .promo-actions {
+                justify-content: center;
+            }
+            .promo-qr-link {
+                width: min(100%, 132px);
+            }
+            .promo-qr-wrap {
+                gap: 10px;
+            }
+            .promo-qr-duo {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                width: 100%;
+            }
+            .promo-copy h3 {
+                font-size: clamp(28px,10vw,46px);
+            }
+        }
+
         .slider-slide .slide-caption {
             position: absolute;
             left: 12px;
@@ -758,6 +928,47 @@
             display: block;
             margin-top: 10px;
         }
+        .official-card-duo {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(150px, 190px);
+            gap: 16px;
+            align-items: center;
+        }
+        .official-card-main,
+        .official-digiy-qr {
+            display: grid;
+            gap: 8px;
+            text-align: center;
+            justify-items: center;
+        }
+        .official-card-main small,
+        .official-digiy-qr small {
+            color: #f7e9d5;
+            font-size: 10px;
+            line-height: 1.35;
+            font-weight: 850;
+        }
+        .official-digiy-qr a {
+            display: block;
+            width: min(100%, 170px);
+            padding: 9px;
+            border-radius: 18px;
+            background: #fff;
+            overflow: visible;
+            box-shadow: 0 10px 24px rgba(0,0,0,.22);
+        }
+        .official-digiy-qr img {
+            width: 100%;
+            height: auto;
+        }
+        @media (max-width: 680px) {
+            .official-card-duo {
+                grid-template-columns: 1fr;
+            }
+            .official-digiy-qr a {
+                width: 145px;
+            }
+        }
 
         /* ===== FOOTER ===== */
         .footer {
@@ -830,8 +1041,232 @@
                 right: 6px;
             }
         }
+
+
+        /* ===== MOBILE COMPACT : réservation d'abord, détails à la demande ===== */
+        .mobile-section-toggle,
+        .mobile-quick-nav {
+            display: none;
+        }
+
+        @media (max-width: 600px) {
+            html {
+                scroll-padding-top: 12px;
+                scroll-padding-bottom: 88px;
+            }
+            body {
+                padding-bottom: calc(78px + env(safe-area-inset-bottom));
+            }
+            .wrap {
+                width: min(100% - 18px, 1120px);
+                padding-top: 8px;
+            }
+            .top {
+                padding-bottom: 10px;
+            }
+            .hero {
+                min-height: 405px;
+                padding: 18px;
+                border-radius: 24px;
+            }
+            .hero-content {
+                gap: 10px;
+            }
+            .hero h1 {
+                font-size: clamp(34px, 12vw, 48px);
+                line-height: .92;
+            }
+            .hero .tagline {
+                font-size: 14px;
+                line-height: 1.32;
+            }
+            .price-block-hero {
+                padding: 10px 14px;
+                border-radius: 15px;
+            }
+            .price-block-hero strong {
+                font-size: 19px;
+            }
+            .hero .actions {
+                grid-template-columns: 1fr 1fr;
+                gap: 7px;
+            }
+            .hero .actions .btn {
+                min-height: 44px;
+                padding: 10px 9px;
+                font-size: 12px;
+            }
+
+            /* Les preuves rapides deviennent un rail horizontal compact. */
+            .cards {
+                display: flex;
+                gap: 8px;
+                overflow-x: auto;
+                scroll-snap-type: x mandatory;
+                scrollbar-width: none;
+                padding: 2px 1px 8px;
+                margin-top: 12px;
+            }
+            .cards::-webkit-scrollbar {
+                display: none;
+            }
+            .card {
+                flex: 0 0 72%;
+                min-height: 104px;
+                padding: 13px;
+                border-radius: 17px;
+                scroll-snap-align: start;
+                box-shadow: 0 8px 22px rgba(61, 43, 22, .09);
+            }
+            .card b {
+                font-size: 13px;
+            }
+            .card small {
+                font-size: 11px;
+                line-height: 1.3;
+            }
+
+            /* La réservation reste ouverte ; les explications se replient. */
+            .section,
+            .slider-section {
+                margin-top: 12px;
+                border-radius: 21px;
+            }
+            #reservation {
+                padding: 17px 12px;
+                border: 2px solid rgba(201, 151, 67, .72);
+                box-shadow: 0 18px 42px rgba(61, 43, 22, .17);
+            }
+            #reservation h2 {
+                font-size: 32px;
+            }
+            #reservation .intro {
+                font-size: 12px;
+                line-height: 1.42;
+            }
+            .calendar-container {
+                padding: 10px 7px;
+            }
+            .calendar-nav .month-year {
+                font-size: 15px;
+            }
+            .calendar-grid .day {
+                font-size: 12px;
+                padding: 6px 0;
+            }
+            .availability {
+                gap: 6px;
+            }
+            .period {
+                padding: 9px 10px;
+                font-size: 11px;
+            }
+            .form {
+                padding: 13px;
+                gap: 9px;
+            }
+            .summary {
+                padding: 15px;
+            }
+
+            .mobile-collapsible {
+                padding: 0 !important;
+                overflow: hidden;
+            }
+            .mobile-section-toggle {
+                width: 100%;
+                min-height: 62px;
+                padding: 14px 15px;
+                border: 0;
+                background: linear-gradient(135deg, rgba(255,250,240,.98), rgba(239,216,178,.96));
+                color: #25190f;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+                text-align: left;
+                font-size: 14px;
+                font-weight: 1000;
+                cursor: pointer;
+            }
+            .mobile-section-toggle span:first-child {
+                display: flex;
+                align-items: center;
+                gap: 9px;
+            }
+            .mobile-section-toggle .mobile-toggle-icon {
+                width: 29px;
+                height: 29px;
+                border-radius: 999px;
+                display: grid;
+                place-items: center;
+                background: #315b43;
+                color: #fff;
+                font-size: 18px;
+                transition: transform .18s ease;
+            }
+            .mobile-collapsible:not(.mobile-collapsed) .mobile-toggle-icon {
+                transform: rotate(45deg);
+            }
+            .mobile-collapsible.mobile-collapsed > :not(.mobile-section-toggle) {
+                display: none !important;
+            }
+            .mobile-collapsible:not(.mobile-collapsed) > :not(.mobile-section-toggle) {
+                margin-left: 13px;
+                margin-right: 13px;
+            }
+            .mobile-collapsible:not(.mobile-collapsed) > :last-child {
+                margin-bottom: 14px;
+            }
+            .mobile-collapsible .slider-header {
+                margin-top: 14px;
+            }
+            .mobile-collapsible.official {
+                display: block;
+            }
+
+            /* Barre fixe : accès direct sans parcourir toute la page. */
+            .mobile-quick-nav {
+                position: fixed;
+                left: max(8px, env(safe-area-inset-left));
+                right: max(8px, env(safe-area-inset-right));
+                bottom: max(8px, env(safe-area-inset-bottom));
+                z-index: 1000;
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 5px;
+                padding: 7px;
+                border: 1px solid rgba(255, 228, 167, .42);
+                border-radius: 20px;
+                background: rgba(37, 25, 15, .94);
+                box-shadow: 0 16px 38px rgba(0, 0, 0, .35);
+                backdrop-filter: blur(14px);
+                -webkit-backdrop-filter: blur(14px);
+            }
+            .mobile-quick-nav a {
+                min-height: 48px;
+                border-radius: 14px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 3px;
+                color: #fff;
+                font-size: 9px;
+                line-height: 1;
+                font-weight: 1000;
+            }
+            .mobile-quick-nav a:first-child {
+                background: linear-gradient(135deg, #fff0b8, #c99743, #70a77c);
+                color: #21150c;
+            }
+            .mobile-quick-nav b {
+                font-size: 17px;
+                line-height: 1;
+            }
+        }
+
     </style>
-    <link rel="stylesheet" href="./mobile-compact.css?v=20260802-1">
 </head>
 <body>
 
@@ -873,7 +1308,7 @@
             </div>
 
             <!-- ===== SECTION "VRAIE MAISON" ===== -->
-            <section class="section">
+            <section class="section" id="info" data-mobile-accordion="La maison et les équipements">
                 <span class="eyebrow">Chez l'habitant, sans ambiguïté</span>
                 <h2>Une vraie maison habitée.</h2>
                 <div class="grid2">
@@ -892,7 +1327,7 @@
             </section>
 
             <!-- ===== SLIDESHOW ===== -->
-            <section class="slider-section" id="gallery">
+            <section class="slider-section" id="gallery" data-mobile-accordion="Voir les photos">
                 <div class="slider-header">
                     <div>
                         <span class="eyebrow">Photos réelles</span>
@@ -930,21 +1365,19 @@
                     </div>
                     <div class="calendar-legend">
                         <span><span class="dot available-dot"></span> Disponible</span>
-                        <span><span class="dot blocked-dot"></span> Déjà occupé / indisponible</span>
+                        <span><span class="dot blocked-dot"></span> Occupé / indisponible</span>
                         <span><span class="dot selected-dot"></span> Votre sélection</span>
                     </div>
                 </div>
 
                 <!-- disponibilités fixes -->
                 <div class="availability">
-                    <div class="period"><span>15 et 16 août 2026</span><strong>Déjà occupé</strong></div>
-                    <div class="period"><span>18 et 19 août 2026</span><strong>Déjà occupé</strong></div>
-                    <div class="period"><span>26 au 28 août 2026</span><strong>Déjà occupé</strong></div>
-                    <div class="period"><span>5 septembre 2026</span><strong>Déjà occupé</strong></div>
-                    <div class="period"><span>15 et 16 septembre 2026</span><strong>Déjà occupé</strong></div>
-                    <div class="period"><span>19 septembre 2026</span><strong>Déjà occupé</strong></div>
-                    <div class="period"><span>24 septembre 2026</span><strong>Déjà occupé</strong></div>
-                    <div class="period"><span>29 septembre 2026</span><strong>Déjà occupé</strong></div>
+                    <div class="period"><span>30 juillet 2026</span><strong>Occupé</strong></div>
+                    <div class="period"><span>1 au 3 août 2026</span><strong>Occupé</strong></div>
+                    <div class="period"><span>8 août 2026</span><strong>Occupé</strong></div>
+                    <div class="period"><span>26 au 28 août 2026</span><strong>Occupé</strong></div>
+                    <div class="period"><span>15 et 16 septembre 2026</span><strong>Occupé</strong></div>
+                    <div class="period"><span>29 septembre 2026</span><strong>Occupé</strong></div>
                     <div class="period open"><span>Autres dates jusqu'au 30 octobre 2026</span><strong>Sur demande</strong></div>
                     <div class="period"><span>À partir du 31 octobre 2026</span><strong>Fermé</strong></div>
                 </div>
@@ -1007,13 +1440,13 @@
             </section>
 
             <!-- ===== CONTACT & PAIEMENT ===== -->
-            <section class="section">
+            <section class="section" id="contact" data-mobile-accordion="Contact et paiement">
                 <span class="eyebrow">Contact et paiement direct</span>
                 <h2>Deux numéros, deux usages.</h2>
                 <div class="grid2">
                     <div class="list">
                         <a class="item" id="waDirect" href="#" target="_blank" rel="noopener">💬 WhatsApp France : +33 6 38 32 94 23</a>
-                        <a class="item" href="mailto:contact@digiylyfe.com">✉️ Email : contact@digiylyfe.com</a>
+                        <a class="item" href="mailto:baptistejb24@gmail.com">✉️ Email : baptistejb24@gmail.com</a>
                     </div>
                     <article class="payment">
                         <h3>Paiement Sendwave</h3>
@@ -1029,25 +1462,43 @@
             </section>
 
             <!-- ===== CARTE OFFICIELLE ===== -->
-            <section class="section official">
+            <section class="section official" id="official" data-mobile-accordion="Carte officielle et QR">
                 <div>
                     <span class="eyebrow" style="color:#f4d99a;">Carte officielle</span>
-                    <h2>Scannez pour revenir.</h2>
-                    <p class="intro">Cette carte peut être imprimée et posée dans la chambre. Son QR ouvre directement la fiche.</p>
+                    <h2>Scannez ou cliquez pour revenir.</h2>
+                    <p class="intro">Cette carte peut être imprimée et posée dans la chambre. Scannez le QR avec un téléphone ou cliquez dessus à l’écran pour revenir directement sur la fiche. Le QR DIGIYLYFE.COM permet aussi de découvrir l’écosystème.</p>
                     <div class="actions" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;">
                         <a class="btn btn-primary" href="#reservation">Choisir mes dates →</a>
                         <a class="btn btn-contact" id="waBottom" href="#" target="_blank" rel="noopener">Écrire à Baptiste</a>
-                        <a class="btn btn-light" href="mailto:contact@digiylyfe.com">Envoyer un email</a>
+                        <a class="btn btn-light" href="mailto:baptistejb24@gmail.com">Envoyer un email</a>
                         <a class="btn btn-light" id="map" href="#" target="_blank" rel="noopener">Voir l'adresse</a>
                     </div>
                 </div>
-                <aside class="official-card">
-                    <a href="https://sarlat-chez-baptiste.digiylyfe.com/" target="_blank" rel="noopener">
-                        <img src="CARTE%20SARLAT%20BAPTISTE.png" alt="Carte officielle SARLAT CHEZ BAPTISTE" loading="lazy">
-                    </a>
-                    <b>Carte à poser dans la chambre</b>
+                <aside class="official-card official-card-duo">
+                    <div class="official-card-main">
+                        <a href="https://sarlat-chez-baptiste.digiylyfe.com/" target="_blank" rel="noopener" aria-label="Ouvrir SARLAT CHEZ BAPTISTE">
+                            <img src="CARTE%20SARLAT%20BAPTISTE.png" alt="Carte officielle SARLAT CHEZ BAPTISTE" loading="lazy">
+                        </a>
+                        <b>Carte à poser dans la chambre</b>
+                        <small>Scannez ou cliquez pour revenir sur la vitrine</small>
+                    </div>
+                    <div class="official-digiy-qr">
+                        <a href="https://digiylyfe.com/" target="_blank" rel="noopener" aria-label="Découvrir DIGIYLYFE.COM">
+                            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAUoAAAFKAQAAAABTUiuoAAAB/klEQVR4nO2bQYrcMBBFX8WCXsqQA8xR5BvkSDnT3MA6Sg4QsJcBm5+FZLenJ4SehG4rpArajeS3+CBK9VXCJu6M/OleEhx11FFHHXX0kajVCJj1q8Fs5VFiaEmroyRJ0gQa54tsiJINdJIkvUUfI8DReyLU/7mH9FoHgjWIGQy65aECHP0L1Ib4w8gWsOEUAY7+JsL7qU72RAGO/sFqRQEzkMY1iPnzAjMcz86na3W0otnMzHqA+SIbABtYiyV8hgBH74mSW4cUyj22zb3tSp2u1VGKR0+SSBOQpjqnEYBY32o8XaujRwdPFJZflmDptYcksOLlHyjA0Y/nFoBGOmmMNa3qcDsie241gG67XpQ0xoXS0NAEJO1DX6020LoUmrqt8xQlSbWBUYqX161G0FK3rPziUoelbo1gSV632kF3B78G0mvA0rTu/Y01kK3zrm4z6LYTSoLdYByK1+R1qx1094RbCqWpqyevGu4JW0MlLbdevp6YN7/RjFZHr3fHEBfIPcAcfoE+RoCj98W181Rs/Biluh3u18bu4BtBb++OjbgG5b6DfHPNdbpWR29R6dtF9nVa7eoOnyrA0Y+guV+t1i06kV+W2tBoUOt/h767OyZ+D8pfJoDVDsT5Wh09+HbKoStKEJfag6/9XXcZTaDmXy046qijjjr6D6E/AR5kRJ2mFJDtAAAAAElFTkSuQmCC" alt="QR code DIGIYLYFE.COM" loading="lazy">
+                        </a>
+                        <b>DIGIYLYFE.COM</b>
+                        <small>Scannez ou cliquez pour découvrir l’écosystème</small>
+                    </div>
                 </aside>
             </section>
+
+
+            <nav class="mobile-quick-nav" aria-label="Navigation rapide sur téléphone">
+                <a href="#reservation" data-mobile-target="reservation"><b>📅</b><span>Réserver</span></a>
+                <a href="#gallery" data-mobile-target="gallery"><b>📷</b><span>Photos</span></a>
+                <a href="#info" data-mobile-target="info"><b>🏠</b><span>Infos</span></a>
+                <a href="#contact" data-mobile-target="contact"><b>💬</b><span>Contact</span></a>
+            </nav>
 
             <footer class="footer">
                 <strong>DIGIYLYFE ∞ SARLAT CHEZ BAPTISTE</strong><br>
@@ -1064,7 +1515,7 @@
             // ===== CONFIG =====
             const CFG = {
                 wa: "33638329423",
-                email: "contact@digiylyfe.com",
+                email: "baptistejb24@gmail.com",
                 pay: "+221771342889",
                 payDisplay: "+221 77 134 28 89",
                 payName: "JB BRAUVILLE",
@@ -1075,20 +1526,19 @@
                 lastDate: "2026-10-30",
                 // Dates bloquées (occupées)
                 blockedDates: [
-                    "2026-08-15",
-                    "2026-08-16",
-                    "2026-08-18",
-                    "2026-08-19",
+                    "2026-07-30",
+                    "2026-08-01",
+                    "2026-08-02",
+                    "2026-08-03",
+                    "2026-08-08",
                     "2026-08-26",
                     "2026-08-27",
                     "2026-08-28",
-                    "2026-09-05",
                     "2026-09-15",
                     "2026-09-16",
-                    "2026-09-19",
-                    "2026-09-24",
                     "2026-09-29"
-                ]};
+                ]
+            };
 
             // ===== WHATSAPP LINKS =====
             const waUrl = "https://wa.me/" + CFG.wa + "?text=" + encodeURIComponent(
@@ -1114,7 +1564,14 @@
                     { src: "https://digiylyfe.net/wp-content/uploads/2026/07/8515DA79-52D4-4802-A9B2-502BBA8DA067.png",
                         alt: "Salle à manger 2", caption: "Salle à manger · autre vue" },
                     { src: "https://digiylyfe.net/wp-content/uploads/2026/07/E8A9CEFE-987D-442E-B094-07C933E8C27B.png",
-                        alt: "Salle de bain", caption: "Salle de bain privative" }
+                        alt: "Salle de bain", caption: "Salle de bain privative" },
+                    { promo: true,
+                        bg: "https://digiylyfe.net/wp-content/uploads/2026/07/1D087BF5-6D9F-462D-91A5-6420FC1A20BD_1_105_c.jpeg",
+                        sarlatQr: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAZoAAAGaAQAAAAAefbjOAAADBElEQVR4nO2cQW7jMAxFH8cGupSBHiBHUW7Qs84NoqP0AAHkZQEHfxaSbKdddVIkqU0tBCfxQyWEIalPuia+PdKf7zPgkEMOOeSQQw5tE7I6ekgDwGhWJy7lqozjQ5bn0P2hKEnKQMwAYcLsIJGsx450kiRdQ/dbnkP3h8bmAIoJjD06cTGipnJD8SCPWp5Dd4P6z29EXUzp0NxBejsjxh/4Sw79DuiLRaRjV6zBYr5AfH/5qlg8+Z4cugVqFhEEjGCEjBFA0MkAE8DaLp58Tw79AJTMzGwA4ntfJjuOPcTcyY5cylHjUctz6N4+YnEASkMHhAmlAaO+vI4cT74nh26BKKfKqAmd6AShHi4+vadlnJ58Tw7dAjWLyCBpAoLU5ImuXK3vc4vYOtR++5niD8pU1KjQfETUVDIKt4jtQ3M0mGgmwEq4bLbRJreIzUNc+QOA5iMkTS2S0Emn4HnEHqDqI5akMjZvAaGFE+V2t/uIzUNzZtlp+eKlXDOKduCAlny6RWwcWmeW1VtAnZbMMndzEHGL2Dg0q9hTb/HvAISMxaZIWemPACyeHrA8h+4OtcySa2UiV8+w5BbFZbiP2AsUcyeSmekUpNpIBa32Ob6o1joeszyHHlDX+DARMqS3jJUmiQFTOtQKhwhTCzFPvieHboHWGlTMzBFijiQZ6jnUM8tdQO1LbqrkcuBoY1a2M65H7Aay42gmvbcO7KhpJWbWW+i883YH0FqzjEWZaJWueP2Bq9j7gEqyWAWI8XVqbXSXXmk49yKcjWQA4QHLc+ju0LoTZgkTs0i51MC99rkTqPqI+qqbBJfWWkcnS4cJGF8nGK113z35nhz6ASi24oYdSyEDgIstnRJLN9Vv2ZNDt+gRRYpoFc9V2VN5PmG4ir0L6PMTPEY4l+d/lYYzFk8fJsbXyeJff8pvD9AXHzEXueo5dNV+632We4DWPdalT2ZppCrxg3q1DLeILUM1EhTFgQ6DF5FsyR5yOYkY4dz7WWP7kPl/JnPIIYcccsghh/4T+gcXHKajZ0wHagAAAABJRU5ErkJggg==",
+                        sarlatHref: "https://sarlat-chez-baptiste.digiylyfe.com/",
+                        digiyQr: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAUoAAAFKAQAAAABTUiuoAAAB/klEQVR4nO2bQYrcMBBFX8WCXsqQA8xR5BvkSDnT3MA6Sg4QsJcBm5+FZLenJ4SehG4rpArajeS3+CBK9VXCJu6M/OleEhx11FFHHXX0kajVCJj1q8Fs5VFiaEmroyRJ0gQa54tsiJINdJIkvUUfI8DReyLU/7mH9FoHgjWIGQy65aECHP0L1Ib4w8gWsOEUAY7+JsL7qU72RAGO/sFqRQEzkMY1iPnzAjMcz86na3W0otnMzHqA+SIbABtYiyV8hgBH74mSW4cUyj22zb3tSp2u1VGKR0+SSBOQpjqnEYBY32o8XaujRwdPFJZflmDptYcksOLlHyjA0Y/nFoBGOmmMNa3qcDsie241gG67XpQ0xoXS0NAEJO1DX6020LoUmrqt8xQlSbWBUYqX161G0FK3rPziUoelbo1gSV632kF3B78G0mvA0rTu/Y01kK3zrm4z6LYTSoLdYByK1+R1qx1094RbCqWpqyevGu4JW0MlLbdevp6YN7/RjFZHr3fHEBfIPcAcfoE+RoCj98W181Rs/Biluh3u18bu4BtBb++OjbgG5b6DfHPNdbpWR29R6dtF9nVa7eoOnyrA0Y+guV+t1i06kV+W2tBoUOt/h767OyZ+D8pfJoDVDsT5Wh09+HbKoStKEJfag6/9XXcZTaDmXy046qijjjr6D6E/AR5kRJ2mFJDtAAAAAElFTkSuQmCC",
+                        digiyHref: "https://digiylyfe.com/",
+                        caption: "DIGIYLYFE · SARLAT CHEZ BAPTISTE · réservation directe · 0 % commission" }
                 ];
 
                 const track = document.getElementById("sliderTrack");
@@ -1130,9 +1587,68 @@
                 slides.forEach((s, i) => {
                     const slide = document.createElement("div");
                     slide.className = "slider-slide";
-                    slide.innerHTML =
-                        `<img src="${s.src}" alt="${s.alt}" loading="${i===0?'eager':'lazy'}"><div class="slide-caption">${s.caption}</div>`;
+                    if (s.promo) {
+                        slide.classList.add("promo-slide");
+                        slide.innerHTML = `
+                            <div class="promo-bg" style="background-image:url('${s.bg}')"></div>
+                            <div class="promo-content">
+                                <div class="promo-copy">
+                                    <span class="promo-kicker">DIGIYLYFE · présence directe</span>
+                                    <h3>SARLAT <span>CHEZ BAPTISTE</span></h3>
+                                    <p>Scannez ou cliquez sur le QR pour revenir directement sur la vitrine. Partagez la fiche à vos proches en un geste.</p>
+                                    <div class="promo-actions">
+                                        <a href="${s.sarlatHref}" target="_blank" rel="noopener">Ouvrir la vitrine →</a>
+                                        <button type="button" class="promo-share-btn">↗ Partager la fiche</button>
+                                    </div>
+                                    <span class="promo-share-status" aria-live="polite"></span>
+                                </div>
+                                <div class="promo-qr-wrap promo-qr-duo">
+                                    <div class="promo-qr-item">
+                                        <a class="promo-qr-link" href="${s.sarlatHref}" target="_blank" rel="noopener" aria-label="Ouvrir SARLAT CHEZ BAPTISTE">
+                                            <img src="${s.sarlatQr}" alt="QR code de SARLAT CHEZ BAPTISTE">
+                                        </a>
+                                        <span class="promo-qr-label">SARLAT CHEZ BAPTISTE</span>
+                                        <small>Scannez ou cliquez pour accéder</small>
+                                    </div>
+                                    <div class="promo-qr-item">
+                                        <a class="promo-qr-link" href="${s.digiyHref}" target="_blank" rel="noopener" aria-label="Découvrir DIGIYLYFE">
+                                            <img src="${s.digiyQr}" alt="QR code de DIGIYLYFE.COM">
+                                        </a>
+                                        <span class="promo-qr-label">DIGIYLYFE.COM</span>
+                                        <small>Scannez ou cliquez pour accéder</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="slide-caption">${s.caption}</div>`;
+                    } else {
+                        const imageHtml = `<img src="${s.src}" alt="${s.alt}" loading="${i===0?'eager':'lazy'}">`;
+                        slide.innerHTML = `${imageHtml}<div class="slide-caption">${s.caption}</div>`;
+                    }
                     track.appendChild(slide);
+                });
+
+                track.querySelectorAll(".promo-share-btn").forEach(btn => {
+                    btn.addEventListener("click", async () => {
+                        const status = btn.closest(".promo-copy").querySelector(".promo-share-status");
+                        const shareData = {
+                            title: "SARLAT CHEZ BAPTISTE",
+                            text: "Découvrez SARLAT CHEZ BAPTISTE sur DIGIYLYFE.",
+                            url: "https://sarlat-chez-baptiste.digiylyfe.com/"
+                        };
+                        try {
+                            if (navigator.share) {
+                                await navigator.share(shareData);
+                                status.textContent = "✓ Fiche prête à être partagée.";
+                            } else if (navigator.clipboard) {
+                                await navigator.clipboard.writeText(shareData.url);
+                                status.textContent = "✓ Lien copié.";
+                            } else {
+                                status.textContent = shareData.url;
+                            }
+                        } catch (err) {
+                            if (err && err.name !== "AbortError") status.textContent = "Copiez le lien : " + shareData.url;
+                        }
+                    });
                 });
 
                 slides.forEach((_, i) => {
@@ -1410,7 +1926,7 @@
                     status.textContent = "";
                     try {
                         const msg = buildMessage();
-                        location.href = "mailto:contact@digiylyfe.com?subject=" + encodeURIComponent(
+                        location.href = "mailto:baptistejb24@gmail.com?subject=" + encodeURIComponent(
                             "Demande directe — SARLAT CHEZ BAPTISTE") + "&body=" + encodeURIComponent(msg);
                     } catch (err) {
                         status.textContent = "⚠️ " + err.message;
@@ -1432,9 +1948,92 @@
         })();
     </script>
 
-    <script src="./mobile-compact.js?v=20260802-1" defer></script>
+
+    <script>
+        (function initMobileCompactExperience() {
+            "use strict";
+
+            const media = window.matchMedia("(max-width: 600px)");
+            const reservation = document.getElementById("reservation");
+            const cards = document.querySelector(".cards");
+            if (!reservation || !cards) return;
+
+            const originalMarker = document.createComment("reservation-original-position");
+            reservation.parentNode.insertBefore(originalMarker, reservation);
+
+            const accordionSections = Array.from(document.querySelectorAll("[data-mobile-accordion]"));
+
+            accordionSections.forEach(section => {
+                section.classList.add("mobile-collapsible", "mobile-collapsed");
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = "mobile-section-toggle";
+                button.setAttribute("aria-expanded", "false");
+                button.innerHTML = '<span>⌄ <strong>' + section.dataset.mobileAccordion + '</strong></span><span class="mobile-toggle-icon" aria-hidden="true">+</span>';
+                button.addEventListener("click", () => {
+                    const willOpen = section.classList.contains("mobile-collapsed");
+                    section.classList.toggle("mobile-collapsed", !willOpen);
+                    button.setAttribute("aria-expanded", willOpen ? "true" : "false");
+                    if (willOpen) {
+                        requestAnimationFrame(() => section.scrollIntoView({ behavior: "smooth", block: "start" }));
+                    }
+                });
+                section.insertBefore(button, section.firstChild);
+            });
+
+            function setAccordion(section, open) {
+                if (!section || !section.matches("[data-mobile-accordion]")) return;
+                section.classList.toggle("mobile-collapsed", !open);
+                const button = section.querySelector(":scope > .mobile-section-toggle");
+                if (button) button.setAttribute("aria-expanded", open ? "true" : "false");
+            }
+
+            function applyLayout() {
+                if (media.matches) {
+                    cards.insertAdjacentElement("afterend", reservation);
+                    accordionSections.forEach(section => setAccordion(section, false));
+                } else {
+                    originalMarker.parentNode.insertBefore(reservation, originalMarker.nextSibling);
+                    accordionSections.forEach(section => setAccordion(section, true));
+                }
+            }
+
+            function openAndGo(id) {
+                const target = document.getElementById(id);
+                if (!target) return;
+                if (media.matches) setAccordion(target, true);
+                requestAnimationFrame(() => target.scrollIntoView({ behavior: "smooth", block: "start" }));
+            }
+
+            document.querySelectorAll("[data-mobile-target]").forEach(link => {
+                link.addEventListener("click", event => {
+                    event.preventDefault();
+                    openAndGo(link.dataset.mobileTarget);
+                });
+            });
+
+            document.addEventListener("click", event => {
+                const anchor = event.target.closest('a[href^="#"]');
+                if (!anchor || !media.matches) return;
+                const id = anchor.getAttribute("href").slice(1);
+                const target = document.getElementById(id);
+                if (target && target.matches("[data-mobile-accordion]")) {
+                    event.preventDefault();
+                    openAndGo(id);
+                }
+            });
+
+            if (typeof media.addEventListener === "function") media.addEventListener("change", applyLayout);
+            else media.addListener(applyLayout);
+
+            applyLayout();
+        })();
+    </script>
+
 </body>
 </html>
+
+
 
 
 
