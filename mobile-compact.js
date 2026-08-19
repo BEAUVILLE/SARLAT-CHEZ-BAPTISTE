@@ -3,7 +3,7 @@
 
     const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
     const SUPABASE_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
-    const SITE_ID = "8807ea87-7e5d-4beb-973e-be552c820675";
+    const UNIT_ID = "8e197c74-c789-4ca7-8e95-1927cc617960";
     const LAST_DATE = "2026-10-30";
     const AUTO_REFRESH_MS = 10000;
     const FALLBACK = new Map([
@@ -11,8 +11,10 @@
         ["2026-08-26", "occupied"],
         ["2026-08-27", "occupied"],
         ["2026-08-28", "occupied"],
+        ["2026-09-05", "closed"],
         ["2026-09-15", "occupied"],
         ["2026-09-16", "occupied"],
+        ["2026-09-24", "closed"],
         ["2026-09-29", "occupied"]
     ]);
 
@@ -54,14 +56,14 @@
 
     async function fetchStates() {
         const params = new URLSearchParams();
-        params.append("site_id", "eq." + SITE_ID);
+        params.append("unit_id", "eq." + UNIT_ID);
         params.append("day", "gte." + localTodayISO());
         params.append("day", "lte." + LAST_DATE);
         params.append("select", "day,status");
         params.append("order", "day.asc");
 
         try {
-            const response = await fetch(SUPABASE_URL + "/rest/v1/digiy_loc_master_calendar?" + params.toString(), {
+            const response = await fetch(SUPABASE_URL + "/rest/v1/digiy_loc_master_unit_calendar?" + params.toString(), {
                 headers: { "apikey": SUPABASE_KEY, "Accept": "application/json" },
                 cache: "no-store"
             });
