@@ -2,7 +2,7 @@
     "use strict";
 
     const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_qyQgVccGrvjo0Wg3cKkWCw_mGWbaVLa";
+    const SUPABASE_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
     const SITE_ID = "8807ea87-7e5d-4beb-973e-be552c820675";
     const LAST_DATE = "2026-10-30";
     const FALLBACK = new Map([
