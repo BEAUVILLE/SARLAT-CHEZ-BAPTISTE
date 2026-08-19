@@ -4,6 +4,10 @@ import re
 path = Path("index.html")
 html = path.read_text(encoding="utf-8")
 
+# 0) Annuler les deux liaisons externes ajoutées involontairement par l'ancien workflow mobile.
+html = html.replace('    <link rel="stylesheet" href="./mobile-compact.css?v=20260802-1">\n', '', 1)
+html = html.replace('    <script src="./mobile-compact.js?v=20260802-1" defer></script>\n', '', 1)
+
 # 1) Nettoyer les anciennes indisponibilités visibles.
 for label in ("30 juillet 2026", "1 au 3 août 2026", "8 août 2026"):
     html = re.sub(r"^.*" + re.escape(label) + r".*\n?", "", html, count=1, flags=re.MULTILINE)
@@ -83,6 +87,9 @@ for stale_label in ("30 juillet 2026", "1 au 3 août 2026", "8 août 2026"):
 
 if "19 août 2026" not in html or '"2026-08-19"' not in html:
     raise SystemExit("Le 19 août occupé n'a pas été posé")
+
+if "mobile-compact.css?v=20260802-1" in html or "mobile-compact.js?v=20260802-1" in html:
+    raise SystemExit("Liaison mobile involontaire encore présente")
 
 path.write_text(html, encoding="utf-8")
 print("CALENDAR_PATCH_OK")
