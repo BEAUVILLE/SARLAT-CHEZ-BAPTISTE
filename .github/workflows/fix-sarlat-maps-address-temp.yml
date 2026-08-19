@@ -1,0 +1,69 @@
+name: Correction Google Maps Chez Baptiste
+
+on:
+  push:
+    paths:
+      - .github/workflows/fix-sarlat-maps-address-temp.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sarlat-maps-address-fix
+  cancel-in-progress: false
+
+jobs:
+  patch-index:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Retirer GPS et utiliser l'adresse complète dans Google Maps
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('index.html')
+          html = path.read_text(encoding='utf-8')
+
+          # Supprimer les deux affichages GPS.
+          html = html.replace('                <p class="intro" style="margin-top:4px;">🧭 GPS : 44.888741, 1.213728</p>\n', '')
+          html = html.replace('                        <div class="item">🧭 GPS : 44.888741, 1.213728</div>\n', '')
+
+          # Supprimer les coordonnées techniques de la configuration.
+          html = html.replace('                lat: 44.888741,\n                lng: 1.213728,\n', '')
+
+          # Adresse complète à utiliser pour les deux boutons Google Maps.
+          map_query = 'Chez Baptiste, 3 Rue du Troubadour Cairels, 24200 Sarlat-la-Canéda, France'
+
+          old_visible = 'href="https://www.google.com/maps/search/?api=1&query=44.888741%2C1.213728" target="_blank" rel="noopener">🗺️ Voir sur Google Maps</a>'
+          new_visible = 'href="https://www.google.com/maps/search/?api=1&query=Chez%20Baptiste%2C%203%20Rue%20du%20Troubadour%20Cairels%2C%2024200%20Sarlat-la-Can%C3%A9da%2C%20France" target="_blank" rel="noopener">🗺️ Voir sur Google Maps</a>'
+          if old_visible not in html:
+              raise SystemExit('Lien Google Maps visible source introuvable')
+          html = html.replace(old_visible, new_visible, 1)
+
+          old_map = 'if (mapEl) mapEl.href = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(CFG.lat + "," + CFG.lng);'
+          new_map = 'if (mapEl) mapEl.href = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent("Chez Baptiste, " + CFG.address);'
+          if old_map not in html:
+              raise SystemExit('Lien Google Maps bas source introuvable')
+          html = html.replace(old_map, new_map, 1)
+
+          # Garde-fous : aucune coordonnée GPS ne doit rester.
+          if '44.888741' in html or '1.213728' in html or '🧭 GPS' in html:
+              raise SystemExit('Coordonnées GPS encore présentes après correction')
+
+          path.write_text(html, encoding='utf-8')
+          PY
+
+      - name: Publier uniquement index.html et retirer le déclencheur temporaire
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git rm .github/workflows/fix-sarlat-maps-address-temp.yml
+          git commit -m "Utilise l’adresse complète pour Google Maps"
+          git push
