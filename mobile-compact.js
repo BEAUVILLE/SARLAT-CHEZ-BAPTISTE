@@ -5,6 +5,7 @@
     const SUPABASE_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
     const SITE_ID = "8807ea87-7e5d-4beb-973e-be552c820675";
     const LAST_DATE = "2026-10-30";
+    const AUTO_REFRESH_MS = 10000;
     const FALLBACK = new Map([
         ["2026-08-19", "occupied"],
         ["2026-08-26", "occupied"],
@@ -254,6 +255,7 @@
         rebuildAvailability();
         initCalendarControl();
         fetchStates();
+        window.setInterval(() => { if (!document.hidden) fetchStates(); }, AUTO_REFRESH_MS);
         window.addEventListener("focus", fetchStates);
         document.addEventListener("visibilitychange", () => { if (!document.hidden) fetchStates(); });
     }
