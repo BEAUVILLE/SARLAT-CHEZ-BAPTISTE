@@ -84,6 +84,26 @@
         .back:hover {
             background: #fff;
         }
+        .top-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .owner-access {
+            padding: 10px 14px;
+            border: 1px solid rgba(49, 91, 67, .34);
+            border-radius: 999px;
+            background: #315b43;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 1000;
+            box-shadow: 0 8px 20px rgba(49, 91, 67, .18);
+        }
+        .owner-access:hover {
+            background: #244936;
+        }
 
         /* ===== HERO ===== */
         .hero {
@@ -668,6 +688,18 @@
             cursor: not-allowed;
             text-decoration: line-through;
         }
+        .calendar-grid .day.closed {
+            background: #35302d;
+            color: #fff;
+            border-color: #35302d;
+            cursor: not-allowed;
+            text-decoration: line-through;
+        }
+        .closed-period {
+            background: #35302d !important;
+            color: #fff !important;
+            border-color: #35302d !important;
+        }
         .calendar-grid .day.selected-start,
         .calendar-grid .day.selected-end {
             background: #c99743;
@@ -725,6 +757,10 @@
         .calendar-legend .dot.blocked-dot {
             background: #fce4e4;
             border-color: #fecaca;
+        }
+        .calendar-legend .dot.closed-dot {
+            background: #35302d;
+            border-color: #35302d;
         }
         .calendar-legend .dot.available-dot {
             background: #fff;
@@ -1064,6 +1100,17 @@
             .top {
                 padding-bottom: 10px;
             }
+            .top-actions {
+                width: 100%;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+            }
+            .top-actions .back,
+            .top-actions .owner-access {
+                text-align: center;
+                padding: 10px 8px;
+                font-size: 11px;
+            }
             .hero {
                 min-height: 405px;
                 padding: 18px;
@@ -1276,7 +1323,10 @@
                 SARLAT CHEZ BAPTISTE
                 <small>Chambre privée chez l'habitant</small>
             </div>
-            <a class="back" href="https://digiylyfe.com/sarlat.html">← Découvrir Sarlat</a>
+            <div class="top-actions">
+                <a class="back" href="https://digiylyfe.com/sarlat.html">← Découvrir Sarlat</a>
+                <a class="owner-access" href="https://sarlat-chez-baptiste.digiylyfe.com/gestion.html" aria-label="Accès propriétaire SARLAT CHEZ BAPTISTE">🔐 Accès propriétaire</a>
+            </div>
         </header>
 
         <main>
@@ -1365,22 +1415,14 @@
                     </div>
                     <div class="calendar-legend">
                         <span><span class="dot available-dot"></span> Disponible</span>
-                        <span><span class="dot blocked-dot"></span> Occupé / indisponible</span>
+                        <span><span class="dot blocked-dot"></span> Occupé</span>
+                        <span><span class="dot closed-dot"></span> Fermé</span>
                         <span><span class="dot selected-dot"></span> Votre sélection</span>
                     </div>
                 </div>
 
-                <!-- disponibilités fixes -->
-                <div class="availability">
-                    <div class="period"><span>30 juillet 2026</span><strong>Occupé</strong></div>
-                    <div class="period"><span>1 au 3 août 2026</span><strong>Occupé</strong></div>
-                    <div class="period"><span>8 août 2026</span><strong>Occupé</strong></div>
-                    <div class="period"><span>26 au 28 août 2026</span><strong>Occupé</strong></div>
-                    <div class="period"><span>15 et 16 septembre 2026</span><strong>Occupé</strong></div>
-                    <div class="period"><span>29 septembre 2026</span><strong>Occupé</strong></div>
-                    <div class="period open"><span>Autres dates jusqu'au 30 octobre 2026</span><strong>Sur demande</strong></div>
-                    <div class="period"><span>À partir du 31 octobre 2026</span><strong>Fermé</strong></div>
-                </div>
+                <!-- disponibilités : les périodes passées disparaissent automatiquement -->
+                <div class="availability" id="availabilityList"></div>
 
                 <div class="formgrid">
                     <form class="form" id="requestForm">
@@ -1503,11 +1545,16 @@
             <footer class="footer">
                 <strong>DIGIYLYFE ∞ SARLAT CHEZ BAPTISTE</strong><br>
                 Réservation directe · Paiement direct · 0 % de commission
+                <div style="margin-top:12px;line-height:1.5;">
+                    <strong>DIGIYLYFE</strong><br>
+                    <strong>LE SAVOIR-FAIRE POUR LE SAVOIR-ÊTRE.</strong>
+                </div>
             </footer>
 
         </main>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         (function() {
             "use strict";
@@ -1524,21 +1571,111 @@
                 eur: 78,
                 xof: 51165,
                 lastDate: "2026-10-30",
-                // Dates bloquées (occupées)
+                masterUnitId: "8e197c74-c789-4ca7-8e95-1927cc617960",
+                closedDates: [],
+                // Repli local si Supabase est momentanément indisponible — MASTER validé le 19 août 2026
                 blockedDates: [
-                    "2026-07-30",
-                    "2026-08-01",
-                    "2026-08-02",
-                    "2026-08-03",
-                    "2026-08-08",
+                    "2026-08-19",
                     "2026-08-26",
                     "2026-08-27",
                     "2026-08-28",
+                    "2026-09-05",
                     "2026-09-15",
                     "2026-09-16",
+                    "2026-09-24",
                     "2026-09-29"
+                ],
+                availabilityPeriods: [
+                    { start: "2026-08-19", end: "2026-08-19", label: "19 août 2026" },
+                    { start: "2026-08-26", end: "2026-08-28", label: "26 au 28 août 2026" },
+                    { start: "2026-09-05", end: "2026-09-05", label: "5 septembre 2026" },
+                    { start: "2026-09-15", end: "2026-09-16", label: "15 et 16 septembre 2026" },
+                    { start: "2026-09-24", end: "2026-09-24", label: "24 septembre 2026" },
+                    { start: "2026-09-29", end: "2026-09-29", label: "29 septembre 2026" }
                 ]
             };
+
+            // ===== DISPONIBILITÉS VISIBLES — MASTER SUPABASE + REPLI LOCAL =====
+            function localIso(date) {
+                return date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" +
+                    String(date.getDate()).padStart(2, "0");
+            }
+
+            function parseLocalIso(value) {
+                const [y, m, d] = String(value || "").split("-").map(Number);
+                return new Date(y, (m || 1) - 1, d || 1, 12);
+            }
+
+            function shortFrenchDate(value, withYear = true) {
+                const date = parseLocalIso(value);
+                return date.toLocaleDateString("fr-FR", {
+                    day: "numeric",
+                    month: "long",
+                    ...(withYear ? { year: "numeric" } : {})
+                });
+            }
+
+            function groupMasterRows(rows) {
+                const clean = (rows || [])
+                    .filter(row => row && row.day && (row.status === "occupied" || row.status === "closed"))
+                    .sort((a, b) => String(a.day).localeCompare(String(b.day)));
+
+                const groups = [];
+                clean.forEach(row => {
+                    const last = groups[groups.length - 1];
+                    if (last && last.status === row.status) {
+                        const expected = new Date(parseLocalIso(last.end));
+                        expected.setDate(expected.getDate() + 1);
+                        if (localIso(expected) === row.day) {
+                            last.end = row.day;
+                            return;
+                        }
+                    }
+                    groups.push({ start: row.day, end: row.day, status: row.status });
+                });
+                return groups;
+            }
+
+            function renderAvailabilityList(masterRows = null) {
+                const el = document.getElementById("availabilityList");
+                if (!el) return;
+
+                const todayIso = localIso(new Date());
+                let groups;
+
+                if (masterRows !== null) {
+                    groups = groupMasterRows(masterRows).filter(group => group.end >= todayIso);
+                } else {
+                    // Repli local : uniquement si la lecture Supabase n'a pas encore répondu.
+                    groups = CFG.availabilityPeriods
+                        .filter(period => period.end >= todayIso)
+                        .map(period => ({
+                            start: period.start,
+                            end: period.end,
+                            status: "occupied",
+                            fallbackLabel: period.label
+                        }));
+                }
+
+                const statusLabel = status => status === "closed" ? "Fermé" : "Occupé";
+                const rowsHtml = groups.map(group => {
+                    let label = group.fallbackLabel || "";
+                    if (!label) {
+                        label = group.start === group.end
+                            ? shortFrenchDate(group.start)
+                            : `${shortFrenchDate(group.start, false)} au ${shortFrenchDate(group.end)}`;
+                    }
+                    const cls = group.status === "closed" ? "period closed-period" : "period";
+                    return `<div class="${cls}"><span>${label}</span><strong>${statusLabel(group.status)}</strong></div>`;
+                }).join("");
+
+                el.innerHTML = rowsHtml +
+                    `<div class="period open"><span>Autres dates jusqu'au 30 octobre 2026</span><strong>Sur demande</strong></div>` +
+                    `<div class="period"><span>À partir du 31 octobre 2026</span><strong>Fermé</strong></div>`;
+            }
+
+            window.DIGIY_RENDER_AVAILABILITY = renderAvailabilityList;
+            renderAvailabilityList();
 
             // ===== WHATSAPP LINKS =====
             const waUrl = "https://wa.me/" + CFG.wa + "?text=" + encodeURIComponent(
@@ -1755,9 +1892,15 @@
 
                 function plural(n, one, many) { return n + " " + (n === 1 ? one : many); }
 
-                function isBlocked(date) {
+                function dayState(date) {
                     const d = iso(date);
-                    return CFG.blockedDates.includes(d);
+                    if (CFG.closedDates.includes(d)) return "closed";
+                    if (CFG.blockedDates.includes(d)) return "occupied";
+                    return "";
+                }
+
+                function isBlocked(date) {
+                    return !!dayState(date);
                 }
 
                 function isPast(date) {
@@ -1810,7 +1953,8 @@
 
                     for (let d = 1; d <= daysInMonth; d++) {
                         const date = dateAt(cursorYear, cursorMonth, d);
-                        const blocked = isBlocked(date);
+                        const state = dayState(date);
+                        const blocked = !!state;
                         const disabled = isPast(date) || blocked || date > parseISO(CFG.lastDate);
                         const startSel = sameDay(date, start);
                         const endSel = sameDay(date, end);
@@ -1822,7 +1966,8 @@
                         if (between) cls += " in-range";
                         if (sameDay(date, today())) cls += " today";
                         if (disabled) cls += " disabled";
-                        if (blocked) cls += " blocked";
+                        if (state === "occupied") cls += " blocked";
+                        if (state === "closed") cls += " closed";
 
                         html += `<div class="${cls}" data-date="${iso(date)}">${d}</div>`;
                     }
@@ -1849,6 +1994,8 @@
                     updateDisplay();
                 }
 
+                window.DIGIY_REFRESH_PUBLIC_CALENDAR = renderCalendar;
+
                 prevBtn.addEventListener("click", () => {
                     const d = new Date(cursorYear, cursorMonth - 1);
                     if (d >= new Date(min.getFullYear(), min.getMonth(), 1)) {
@@ -1865,6 +2012,49 @@
                 });
 
                 renderCalendar();
+            })();
+
+            // ===== SYNCHRONISATION PUBLIQUE DU MASTER LOC =====
+            (async function syncMasterCalendar() {
+                if (!window.supabase || !CFG.masterUnitId) return;
+
+                try {
+                    const publicDb = window.supabase.createClient(
+                        "https://wesqmwjjtsefyjnluosj.supabase.co",
+                        "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3",
+                        {
+                            auth: {
+                                persistSession: false,
+                                autoRefreshToken: false,
+                                detectSessionInUrl: false
+                            }
+                        }
+                    );
+
+                    const todayIso = localIso(new Date());
+                    const { data, error } = await publicDb
+                        .from("digiy_loc_master_unit_calendar")
+                        .select("day,status")
+                        .eq("unit_id", CFG.masterUnitId)
+                        .gte("day", todayIso)
+                        .lte("day", CFG.lastDate)
+                        .order("day");
+
+                    if (error) throw error;
+
+                    const rows = Array.isArray(data) ? data : [];
+                    CFG.blockedDates = rows.filter(row => row.status === "occupied").map(row => row.day);
+                    CFG.closedDates = rows.filter(row => row.status === "closed").map(row => row.day);
+
+                    if (window.DIGIY_RENDER_AVAILABILITY) {
+                        window.DIGIY_RENDER_AVAILABILITY(rows);
+                    }
+                    if (window.DIGIY_REFRESH_PUBLIC_CALENDAR) {
+                        window.DIGIY_REFRESH_PUBLIC_CALENDAR();
+                    }
+                } catch (error) {
+                    console.warn("[SARLAT MASTER] Lecture Supabase indisponible, repli local conservé.", error);
+                }
             })();
 
             // ===== FORMULAIRE =====
@@ -2032,6 +2222,8 @@
 
 </body>
 </html>
+
+
 
 
 
