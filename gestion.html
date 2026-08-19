@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="theme-color" content="#25190f">
+  <title>Gestion calendrier — SARLAT CHEZ BAPTISTE</title>
+  <style>
+    *{box-sizing:border-box}html{color-scheme:light}body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#25190f;background:linear-gradient(180deg,#fffaf1,#ead4ad);min-height:100vh}button,input{font:inherit}.wrap{width:min(760px,calc(100% - 24px));margin:auto;padding:18px 0 42px}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}.brand{font-weight:1000;letter-spacing:.04em}.brand small{display:block;color:#6e5845;font-size:11px;margin-top:3px}.back{color:#25190f;text-decoration:none;padding:9px 13px;border-radius:999px;background:#fff;border:1px solid #d8c8b6;font-weight:900;font-size:12px}.panel{background:#ffffffdf;border:1px solid #d8c8b6;border-radius:26px;padding:clamp(18px,4vw,30px);box-shadow:0 16px 42px rgba(61,43,22,.12);margin-top:12px}.eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:.12em;font-weight:1000;color:#315b43}h1,h2{font-family:Georgia,"Times New Roman",serif;margin:8px 0 6px;line-height:1}h1{font-size:clamp(32px,7vw,52px)}h2{font-size:30px}.muted{color:#6e5845;font-weight:700;line-height:1.5}.field{display:grid;gap:6px;margin-top:14px}.field label{font-size:11px;font-weight:1000;text-transform:uppercase;color:#6e5845}.field input{min-height:50px;border:1px solid #cdbba8;border-radius:14px;padding:12px;background:#fff}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}.btn{border:0;border-radius:999px;min-height:46px;padding:11px 17px;font-weight:1000;cursor:pointer}.primary{background:linear-gradient(135deg,#fff0b8,#c99743,#70a77c);color:#21150c}.dark{background:#315b43;color:#fff}.ghost{background:#fff;border:1px solid #cdbba8;color:#25190f}.danger{background:#2b2522;color:#fff}.status{min-height:20px;margin-top:10px;font-size:12px;font-weight:900;color:#315b43}.error{color:#a32626}.hidden{display:none!important}.calendar{margin-top:16px;border:1px solid #d8c8b6;border-radius:20px;padding:13px;background:#fff}.nav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}.nav button{border:1px solid #d8c8b6;background:#f7f2ea;border-radius:999px;padding:7px 13px;font-weight:1000;cursor:pointer}.month{font-weight:1000;text-transform:capitalize}.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}.dow{text-align:center;color:#7b6754;font-size:10px;font-weight:1000;padding:5px 0}.day{aspect-ratio:1/1;border:1px solid transparent;border-radius:12px;background:#fff;display:grid;place-items:center;font-weight:900;cursor:pointer;position:relative;color:#25190f}.day:hover:not(:disabled){border-color:#c99743}.day:disabled{opacity:.28;cursor:not-allowed}.day.occupied{background:#fbe1df;color:#9d211c;border-color:#efb3af}.day.closed{background:#35302d;color:#fff;border-color:#35302d}.day.selected{outline:3px solid #c99743;outline-offset:1px}.day.today::after{content:"";position:absolute;bottom:5px;width:5px;height:5px;border-radius:50%;background:#315b43}.legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;font-size:11px;font-weight:850;color:#6e5845}.dot{display:inline-block;width:11px;height:11px;border-radius:4px;vertical-align:-1px;margin-right:4px;border:1px solid #cdbba8}.dot.free{background:#fff}.dot.occ{background:#fbe1df}.dot.close{background:#35302d}.selection{margin-top:14px;padding:12px 14px;border-radius:15px;background:#f7e9d5;font-weight:900}.state-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}.state-actions button{border:0;border-radius:15px;padding:13px 7px;font-weight:1000;cursor:pointer}.freeBtn{background:#e3f1e7;color:#245035}.occBtn{background:#fbe1df;color:#9d211c}.closeBtn{background:#35302d;color:#fff}.sessionbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;border-radius:15px;background:#315b4312;margin-top:12px;font-size:12px;font-weight:850}.sessionbar button{border:0;background:#fff;border-radius:999px;padding:7px 11px;font-weight:900;cursor:pointer}@media(max-width:560px){.state-actions{grid-template-columns:1fr}.panel{border-radius:20px}.day{border-radius:9px;font-size:12px}.wrap{width:min(100% - 16px,760px)}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">DIGIYLYFE · MASTER LOC<small>Gestion propriétaire — SARLAT CHEZ BAPTISTE</small></div>
+    <a class="back" href="./">← Voir la fiche publique</a>
+  </header>
+
+  <section class="panel" id="loginPanel">
+    <span class="eyebrow">Accès privé</span>
+    <h1>Gérer mes dates.</h1>
+    <p class="muted">Votre calendrier public reste en lecture seule. Connectez-vous pour ouvrir, occuper ou fermer des dates.</p>
+    <div class="field">
+      <label for="email">Email propriétaire</label>
+      <input id="email" type="email" autocomplete="email" placeholder="votre@email.com">
+    </div>
+    <button class="btn primary" id="sendCode" type="button">Recevoir mon code →</button>
+    <div id="otpBlock" class="hidden">
+      <div class="field">
+        <label for="otp">Code reçu par email</label>
+        <input id="otp" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="Code temporaire">
+      </div>
+      <button class="btn dark" id="verifyCode" type="button">Ouvrir ma gestion →</button>
+    </div>
+    <p class="status" id="loginStatus" aria-live="polite"></p>
+  </section>
+
+  <section class="panel hidden" id="managerPanel">
+    <span class="eyebrow">Calendrier propriétaire</span>
+    <h2>SARLAT CHEZ BAPTISTE</h2>
+    <p class="muted">Cliquez une date pour la sélectionner. Cliquez une seconde date pour sélectionner toute la période. Puis choisissez son état.</p>
+    <div class="sessionbar"><span id="sessionEmail"></span><button id="logout" type="button">Déconnexion</button></div>
+
+    <div class="calendar">
+      <div class="nav"><button id="prev" type="button">‹</button><span class="month" id="monthLabel"></span><button id="next" type="button">›</button></div>
+      <div class="grid" id="calendarGrid"></div>
+      <div class="legend"><span><i class="dot free"></i>Disponible</span><span><i class="dot occ"></i>Occupé</span><span><i class="dot close"></i>Fermé</span></div>
+    </div>
+
+    <div class="selection" id="selectionLabel">Sélection : aucune date</div>
+    <div class="state-actions">
+      <button class="freeBtn" id="makeAvailable" type="button">🟢 Disponible</button>
+      <button class="occBtn" id="makeOccupied" type="button">🔴 Occupé</button>
+      <button class="closeBtn" id="makeClosed" type="button">⚫ Fermé</button>
+    </div>
+    <p class="status" id="saveStatus" aria-live="polite"></p>
+  </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(() => {
+  'use strict';
+  const SUPABASE_URL = 'https://wesqmwjjtsefyjnluosj.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_qyQgVccGrvjo0Wg3cKkWCw_mGWbaVLa';
+  const SITE_SLUG = 'sarlat-chez-baptiste';
+  const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {auth:{persistSession:true,detectSessionInUrl:true}});
+
+  const $ = id => document.getElementById(id);
+  const loginPanel=$('loginPanel'), managerPanel=$('managerPanel'), loginStatus=$('loginStatus'), saveStatus=$('saveStatus');
+  let siteId=null, current=new Date(), states=new Map(), start=null, end=null;
+  current=new Date(current.getFullYear(), current.getMonth(), 1, 12);
+
+  const iso = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  const parse = s => { const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d,12); };
+  const today = () => { const n=new Date(); return new Date(n.getFullYear(),n.getMonth(),n.getDate(),12); };
+  const fmt = d => d.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
+  const between = (a,b) => { const out=[]; for(let d=new Date(a); d<=b; d.setDate(d.getDate()+1)) out.push(iso(d)); return out; };
+  const selectedDates = () => start ? between(start,end||start) : [];
+
+  function setMsg(el,msg,bad=false){el.textContent=msg||'';el.classList.toggle('error',bad);}
+  function showManager(email){loginPanel.classList.add('hidden');managerPanel.classList.remove('hidden');$('sessionEmail').textContent='Connecté : '+email;}
+  function showLogin(){managerPanel.classList.add('hidden');loginPanel.classList.remove('hidden');}
+
+  async function sendCode(){
+    const email=$('email').value.trim();
+    if(!email) return setMsg(loginStatus,'⚠️ Indiquez votre email.',true);
+    $('sendCode').disabled=true; setMsg(loginStatus,'Envoi du code…');
+    const {error}=await db.auth.signInWithOtp({email,options:{shouldCreateUser:false,emailRedirectTo:location.origin+location.pathname}});
+    $('sendCode').disabled=false;
+    if(error) return setMsg(loginStatus,'⚠️ '+error.message,true);
+    $('otpBlock').classList.remove('hidden');
+    setMsg(loginStatus,'✓ Email envoyé. Entrez le code reçu (ou ouvrez le lien de connexion si votre modèle email l’utilise).');
+  }
+
+  async function verifyCode(){
+    const email=$('email').value.trim(), token=$('otp').value.trim();
+    if(!email||!token) return setMsg(loginStatus,'⚠️ Email et code nécessaires.',true);
+    $('verifyCode').disabled=true; setMsg(loginStatus,'Vérification…');
+    const {data,error}=await db.auth.verifyOtp({email,token,type:'email'});
+    $('verifyCode').disabled=false;
+    if(error) return setMsg(loginStatus,'⚠️ Code invalide ou expiré.',true);
+    await enter(data.session);
+  }
+
+  async function enter(session){
+    if(!session) return showLogin();
+    const {data:site,error}=await db.from('digiy_loc_master_sites').select('id,slug,display_name').eq('slug',SITE_SLUG).maybeSingle();
+    if(error||!site){await db.auth.signOut(); showLogin(); return setMsg(loginStatus,'⚠️ Cet email n’est pas autorisé pour ce site.',true);}
+    siteId=site.id; showManager(session.user.email||'propriétaire'); await loadStates(); render();
+  }
+
+  async function loadStates(){
+    if(!siteId)return;
+    const from=iso(new Date(today().getFullYear(),today().getMonth(),1,12));
+    const {data,error}=await db.from('digiy_loc_master_calendar').select('day,status').eq('site_id',siteId).gte('day',from).order('day');
+    if(error){setMsg(saveStatus,'⚠️ Lecture calendrier impossible : '+error.message,true);return;}
+    states=new Map((data||[]).map(r=>[r.day,r.status]));
+  }
+
+  function resetSelection(){start=null;end=null;updateSelection();}
+  function updateSelection(){
+    if(!start)return $('selectionLabel').textContent='Sélection : aucune date';
+    $('selectionLabel').textContent=end&&iso(end)!==iso(start)?'Sélection : '+fmt(start)+' → '+fmt(end):'Sélection : '+fmt(start);
+  }
+
+  function choose(date){
+    if(date<today())return;
+    if(!start||end){start=date;end=null;} else {if(date<start){end=start;start=date;} else end=date;}
+    updateSelection(); render();
+  }
+
+  function render(){
+    const y=current.getFullYear(),m=current.getMonth();
+    $('monthLabel').textContent=current.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+    const grid=$('calendarGrid');grid.innerHTML='';
+    ['Lu','Ma','Me','Je','Ve','Sa','Di'].forEach(x=>{const e=document.createElement('div');e.className='dow';e.textContent=x;grid.appendChild(e);});
+    const first=new Date(y,m,1,12), offset=(first.getDay()+6)%7, last=new Date(y,m+1,0,12).getDate();
+    for(let i=0;i<offset;i++){const e=document.createElement('div');grid.appendChild(e);}
+    const sel=new Set(selectedDates());
+    for(let d=1;d<=last;d++){
+      const date=new Date(y,m,d,12), key=iso(date), b=document.createElement('button');
+      b.type='button';b.className='day';b.textContent=d;b.dataset.date=key;
+      if(date<today())b.disabled=true;
+      const state=states.get(key);if(state)b.classList.add(state);
+      if(sel.has(key))b.classList.add('selected');
+      if(key===iso(today()))b.classList.add('today');
+      b.addEventListener('click',()=>choose(date));grid.appendChild(b);
+    }
+  }
+
+  async function applyState(status){
+    const dates=selectedDates(); if(!dates.length)return setMsg(saveStatus,'⚠️ Sélectionnez une date ou une période.',true);
+    setMsg(saveStatus,'Enregistrement…');
+    let error=null;
+    if(status==='available'){
+      ({error}=await db.from('digiy_loc_master_calendar').delete().eq('site_id',siteId).in('day',dates));
+    } else {
+      const rows=dates.map(day=>({site_id:siteId,day,status,updated_at:new Date().toISOString()}));
+      ({error}=await db.from('digiy_loc_master_calendar').upsert(rows,{onConflict:'site_id,day'}));
+    }
+    if(error)return setMsg(saveStatus,'⚠️ Enregistrement refusé : '+error.message,true);
+    await loadStates(); resetSelection(); render();
+    setMsg(saveStatus,'✓ Calendrier enregistré. La fiche publique utilise maintenant cet état.');
+  }
+
+  $('sendCode').addEventListener('click',sendCode);$('verifyCode').addEventListener('click',verifyCode);
+  $('prev').addEventListener('click',()=>{current=new Date(current.getFullYear(),current.getMonth()-1,1,12);render();});
+  $('next').addEventListener('click',()=>{current=new Date(current.getFullYear(),current.getMonth()+1,1,12);render();});
+  $('makeAvailable').addEventListener('click',()=>applyState('available'));
+  $('makeOccupied').addEventListener('click',()=>applyState('occupied'));
+  $('makeClosed').addEventListener('click',()=>applyState('closed'));
+  $('logout').addEventListener('click',async()=>{await db.auth.signOut();siteId=null;states.clear();resetSelection();showLogin();setMsg(loginStatus,'✓ Déconnecté.');});
+
+  db.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_IN'&&session) setTimeout(()=>enter(session),0);if(event==='SIGNED_OUT')showLogin();});
+  db.auth.getSession().then(({data})=>{if(data.session)enter(data.session);});
+})();
+</script>
+</body>
+</html>
