@@ -3,7 +3,7 @@ name: Correction définitive du calendrier index
 on:
   push:
     paths:
-      - .github/workflows/apply-mobile-compact.yml
+      - calendar_source_patch_final.py
 
 permissions:
   contents: write
