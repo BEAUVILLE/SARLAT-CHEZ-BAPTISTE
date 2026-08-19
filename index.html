@@ -1302,10 +1302,10 @@
             <!-- ===== LOCALISATION VISIBLE ===== -->
             <section class="section" aria-label="Localisation" style="margin-top:12px;padding:16px 18px;">
                 <span class="eyebrow">Localisation</span>
-                <p style="margin-top:8px;font-weight:1000;">📍 3 rue du Troubadour Cairels · 24200 Sarlat-la-Canéda</p>
+                <p style="margin-top:8px;font-weight:1000;"><a href="https://sarlat-chez-baptiste.digiylyfe.com/" aria-label="Ouvrir la fiche directe SARLAT CHEZ BAPTISTE">📍 3 rue du Troubadour Cairels · 24200 Sarlat-la-Canéda</a></p>
                 <p class="intro" style="margin-top:4px;">🏰 À environ 200 m du centre historique de Sarlat-la-Canéda.</p>
                 <div class="actions" style="margin-top:10px;">
-                    <a class="btn btn-light" href="https://www.google.com/maps/search/?api=1&query=Chez%20Baptiste%2C%203%20Rue%20du%20Troubadour%20Cairels%2C%2024200%20Sarlat-la-Can%C3%A9da%2C%20France" target="_blank" rel="noopener">🗺️ Voir sur Google Maps</a>
+                    <a class="btn btn-light" href="https://sarlat-chez-baptiste.digiylyfe.com/">🔗 Voir la fiche DIGIYLYFE</a>
                 </div>
             </section>
 
@@ -1485,7 +1485,7 @@
                         <a class="btn btn-primary" href="#reservation">Choisir mes dates →</a>
                         <a class="btn btn-contact" id="waBottom" href="#" target="_blank" rel="noopener">Écrire à Baptiste</a>
                         <a class="btn btn-light" href="mailto:baptistejb24@gmail.com">Envoyer un email</a>
-                        <a class="btn btn-light" id="map" href="#" target="_blank" rel="noopener">Voir l'adresse</a>
+                        <a class="btn btn-light" href="https://sarlat-chez-baptiste.digiylyfe.com/">Voir la fiche DIGIYLYFE</a>
                     </div>
                 </div>
                 <aside class="official-card official-card-duo">
@@ -1561,8 +1561,6 @@
                 const el = document.getElementById(id);
                 if (el) el.href = waUrl;
             });
-            const mapEl = document.getElementById("map");
-            if (mapEl) mapEl.href = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent("Chez Baptiste, " + CFG.address);
 
             // ===== SLIDESHOW =====
             (function initSlider() {
