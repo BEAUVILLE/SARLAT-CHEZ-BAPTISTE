@@ -1304,9 +1304,8 @@
                 <span class="eyebrow">Localisation</span>
                 <p style="margin-top:8px;font-weight:1000;">📍 3 rue du Troubadour Cairels · 24200 Sarlat-la-Canéda</p>
                 <p class="intro" style="margin-top:4px;">🏰 À environ 200 m du centre historique de Sarlat-la-Canéda.</p>
-                <p class="intro" style="margin-top:4px;">🧭 GPS : 44.888741, 1.213728</p>
                 <div class="actions" style="margin-top:10px;">
-                    <a class="btn btn-light" href="https://www.google.com/maps/search/?api=1&query=44.888741%2C1.213728" target="_blank" rel="noopener">🗺️ Voir sur Google Maps</a>
+                    <a class="btn btn-light" href="https://www.google.com/maps/search/?api=1&query=Chez%20Baptiste%2C%203%20Rue%20du%20Troubadour%20Cairels%2C%2024200%20Sarlat-la-Can%C3%A9da%2C%20France" target="_blank" rel="noopener">🗺️ Voir sur Google Maps</a>
                 </div>
             </section>
 
@@ -1332,7 +1331,6 @@
                         <div class="item">✓ Salle à manger partagée</div>
                         <div class="item">✓ Wi-Fi gratuit</div>
                         <div class="item">📍 Adresse : 3 rue du Troubadour Cairels, 24200 Sarlat-la-Canéda, France</div>
-                        <div class="item">🧭 GPS : 44.888741, 1.213728</div>
                         <div class="item">✓ À environ 200 m du centre historique de Sarlat-la-Canéda</div>
                         <div class="item">✓ Stationnement : 2 parkings gratuits rue Louis Blanc à environ 50 m de la maison</div>
                         <div class="item">✓ 3 places de stationnement dans la rue, selon disponibilité</div>
@@ -1537,8 +1535,6 @@
                 payName: "JB BRAUVILLE",
                 payCountry: "Sénégal",
                 address: "3 rue du Troubadour Cairels, 24200 Sarlat-la-Canéda, France",
-                lat: 44.888741,
-                lng: 1.213728,
                 eur: 78,
                 xof: 51165,
                 lastDate: "2026-10-30",
@@ -1566,7 +1562,7 @@
                 if (el) el.href = waUrl;
             });
             const mapEl = document.getElementById("map");
-            if (mapEl) mapEl.href = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(CFG.lat + "," + CFG.lng);
+            if (mapEl) mapEl.href = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent("Chez Baptiste, " + CFG.address);
 
             // ===== SLIDESHOW =====
             (function initSlider() {
