@@ -1,0 +1,56 @@
+name: SEO chambre Sarlat direct propriétaire
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/seo-chambre-sarlat-direct-proprietaire.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Appliquer les 4 remplacements validés
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          replacements = [
+              ('<title>SARLAT CHEZ BAPTISTE — Chambre privée</title>', '<title>Chambre Sarlat en direct propriétaire — Chez Baptiste</title>'),
+              ('<meta name="description" content="Chambre privée chez l’habitant à Sarlat-la-Canéda. Calendrier, demande directe, arrivée autonome, paiement Sendwave.">', '<meta name="description" content="Chambre privée à Sarlat-la-Canéda en direct avec le propriétaire. 2 voyageurs, salle de bain privative, réservation directe, 78 € la nuitée.">'),
+              ('<meta property="og:title" content="SARLAT CHEZ BAPTISTE — Chambre privée">', '<meta property="og:title" content="Chambre Sarlat en direct propriétaire — Chez Baptiste">'),
+              ('<p class="tagline">Dormez chez l\'habitant, avec votre chambre privée, votre salle de bain et votre tranquillité.</p>', '<p class="tagline">Chambre privée à Sarlat · réservation directe avec le propriétaire.</p>'),
+          ]
+          for old, new in replacements:
+              count = s.count(old)
+              if count != 1:
+                  raise SystemExit(f'GARDE-FOU: ancre trouvée {count} fois: {old[:80]}')
+              s = s.replace(old, new, 1)
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Contrôle laser
+        shell: bash
+        run: |
+          grep -F '<title>Chambre Sarlat en direct propriétaire — Chez Baptiste</title>' index.html
+          grep -F 'Chambre privée à Sarlat-la-Canéda en direct avec le propriétaire. 2 voyageurs, salle de bain privative, réservation directe, 78 € la nuitée.' index.html
+          grep -F '<meta property="og:title" content="Chambre Sarlat en direct propriétaire — Chez Baptiste">' index.html
+          grep -F '<p class="tagline">Chambre privée à Sarlat · réservation directe avec le propriétaire.</p>' index.html
+          git diff --check
+      - name: Commit final et suppression du workflow temporaire
+        shell: bash
+        run: |
+          git config user.name 'DIGIYLYFE Atelier'
+          git config user.email 'actions@users.noreply.github.com'
+          git rm .github/workflows/seo-chambre-sarlat-direct-proprietaire.yml
+          git add index.html
+          git commit -m 'seo: cibler chambre Sarlat direct propriétaire'
+          git push origin main
