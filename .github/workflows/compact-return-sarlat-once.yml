@@ -1,0 +1,27 @@
+name: Compact Sarlat return once
+on:
+  push:
+    paths:
+      - '.github/workflows/compact-return-sarlat-once.yml'
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate patch
+        run: python3 -m py_compile scripts/compact-return-once.py
+      - name: Apply
+        run: python3 scripts/compact-return-once.py
+      - name: Validate result
+        run: |
+          grep -q 'min-height:42px' index.html
+          grep -q 'justify-self:start' index.html
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'Sarlat Chez Baptiste: compacter le retour site'
+          git push
