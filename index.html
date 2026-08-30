@@ -1313,6 +1313,14 @@
             }
         }
 
+
+        /* DIGIY media opt Sarlat 20260830 */
+        .hero>picture.digiy-hero-picture{position:absolute;inset:0;width:100%;height:100%;z-index:-2;display:block}
+        .hero>picture.digiy-hero-picture>img{width:100%;height:100%;object-fit:cover;object-position:50% 85%;display:block}
+        .slider-slide>picture.digiy-slide-picture{display:block;width:100%;height:100%}
+        .slider-slide>picture.digiy-slide-picture>img{width:100%;height:100%;object-fit:cover;display:block}
+        .official-card-main picture.digiy-official-card-picture{display:block;width:100%}
+        .official-card-main picture.digiy-official-card-picture>img{display:block;width:100%;height:auto}
     </style>
 </head>
 <body>
@@ -1334,7 +1342,7 @@
 
             <!-- ===== HERO ===== -->
             <section class="hero">
-                <img src="https://digiylyfe.net/wp-content/uploads/2026/07/1D087BF5-6D9F-462D-91A5-6420FC1A20BD_1_105_c.jpeg" alt="Centre médiéval de Sarlat-la-Canéda" loading="lazy">
+                <picture class="digiy-hero-picture"><source type="image/avif" srcset="assets/sarlat/hero-centre-medieval.avif"><source type="image/webp" srcset="assets/sarlat/hero-centre-medieval.webp"><img src="assets/sarlat/hero-centre-medieval.jpg" alt="Centre médiéval de Sarlat-la-Canéda" decoding="async"></picture>
                 <div class="hero-content">
                     <span class="hero-badge">Sarlat-la-Canéda · Maison occupée</span>
                     <h1>SARLAT <em>CHEZ BAPTISTE</em></h1>
@@ -1520,7 +1528,7 @@
                 <aside class="official-card official-card-duo">
                     <div class="official-card-main">
                         <a href="https://sarlat-chez-baptiste.digiylyfe.com/" target="_blank" rel="noopener" aria-label="Ouvrir SARLAT CHEZ BAPTISTE">
-                            <img src="CARTE%20SARLAT%20BAPTISTE.png" alt="Carte officielle SARLAT CHEZ BAPTISTE" loading="lazy">
+                            <picture class="digiy-official-card-picture"><source type="image/avif" srcset="CARTE%20SARLAT%20BAPTISTE.avif"><source type="image/webp" srcset="CARTE%20SARLAT%20BAPTISTE.webp"><img src="CARTE%20SARLAT%20BAPTISTE.png" alt="Carte officielle SARLAT CHEZ BAPTISTE" loading="lazy" decoding="async"></picture>
                         </a>
                         <b>Carte à poser dans la chambre</b>
                         <small>Scannez ou cliquez pour revenir sur la vitrine</small>
@@ -1691,20 +1699,20 @@
             // ===== SLIDESHOW =====
             (function initSlider() {
                 const slides = [
-                    { src: "https://digiylyfe.net/wp-content/uploads/2026/07/F9595D25-B9F1-4049-95CD-00554BC8F369.png",
+                    { src: "assets/sarlat/chambre-privee.png",
                         alt: "Chambre privée", caption: "La chambre privée" },
-                    { src: "https://digiylyfe.net/wp-content/uploads/2026/07/254BB65E-9E5B-4316-AD0F-C7DA83DFAC6E.png",
+                    { src: "assets/sarlat/chambre-autre-angle.png",
                         alt: "Deuxième vue", caption: "Chambre · autre angle" },
-                    { src: "https://digiylyfe.net/wp-content/uploads/2026/07/83C44D61-28B0-4020-A1DF-B7D72F5081B8.png",
+                    { src: "assets/sarlat/cuisine-equipee.png",
                         alt: "Cuisine", caption: "Cuisine équipée" },
-                    { src: "https://digiylyfe.net/wp-content/uploads/2026/07/B4063FF2-EBFE-4191-A7E3-82D524060858.png",
+                    { src: "assets/sarlat/salle-a-manger.png",
                         alt: "Salle à manger", caption: "Salle à manger" },
-                    { src: "https://digiylyfe.net/wp-content/uploads/2026/07/8515DA79-52D4-4802-A9B2-502BBA8DA067.png",
+                    { src: "assets/sarlat/salle-a-manger-autre-vue.png",
                         alt: "Salle à manger 2", caption: "Salle à manger · autre vue" },
-                    { src: "https://digiylyfe.net/wp-content/uploads/2026/07/E8A9CEFE-987D-442E-B094-07C933E8C27B.png",
+                    { src: "assets/sarlat/salle-de-bain.png",
                         alt: "Salle de bain", caption: "Salle de bain privative" },
                     { promo: true,
-                        bg: "https://digiylyfe.net/wp-content/uploads/2026/07/1D087BF5-6D9F-462D-91A5-6420FC1A20BD_1_105_c.jpeg",
+                        bg: "assets/sarlat/hero-centre-medieval.webp",
                         sarlatQr: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAZoAAAGaAQAAAAAefbjOAAADBElEQVR4nO2cQW7jMAxFH8cGupSBHiBHUW7Qs84NoqP0AAHkZQEHfxaSbKdddVIkqU0tBCfxQyWEIalPuia+PdKf7zPgkEMOOeSQQw5tE7I6ekgDwGhWJy7lqozjQ5bn0P2hKEnKQMwAYcLsIJGsx450kiRdQ/dbnkP3h8bmAIoJjD06cTGipnJD8SCPWp5Dd4P6z29EXUzp0NxBejsjxh/4Sw79DuiLRaRjV6zBYr5AfH/5qlg8+Z4cugVqFhEEjGCEjBFA0MkAE8DaLp58Tw79AJTMzGwA4ntfJjuOPcTcyY5cylHjUctz6N4+YnEASkMHhAmlAaO+vI4cT74nh26BKKfKqAmd6AShHi4+vadlnJ58Tw7dAjWLyCBpAoLU5ImuXK3vc4vYOtR++5niD8pU1KjQfETUVDIKt4jtQ3M0mGgmwEq4bLbRJreIzUNc+QOA5iMkTS2S0Emn4HnEHqDqI5akMjZvAaGFE+V2t/uIzUNzZtlp+eKlXDOKduCAlny6RWwcWmeW1VtAnZbMMndzEHGL2Dg0q9hTb/HvAISMxaZIWemPACyeHrA8h+4OtcySa2UiV8+w5BbFZbiP2AsUcyeSmekUpNpIBa32Ob6o1joeszyHHlDX+DARMqS3jJUmiQFTOtQKhwhTCzFPvieHboHWGlTMzBFijiQZ6jnUM8tdQO1LbqrkcuBoY1a2M65H7Aay42gmvbcO7KhpJWbWW+i883YH0FqzjEWZaJWueP2Bq9j7gEqyWAWI8XVqbXSXXmk49yKcjWQA4QHLc+ju0LoTZgkTs0i51MC99rkTqPqI+qqbBJfWWkcnS4cJGF8nGK113z35nhz6ASi24oYdSyEDgIstnRJLN9Vv2ZNDt+gRRYpoFc9V2VN5PmG4ir0L6PMTPEY4l+d/lYYzFk8fJsbXyeJff8pvD9AXHzEXueo5dNV+632We4DWPdalT2ZppCrxg3q1DLeILUM1EhTFgQ6DF5FsyR5yOYkY4dz7WWP7kPl/JnPIIYcccsghh/4T+gcXHKajZ0wHagAAAABJRU5ErkJggg==",
                         sarlatHref: "https://sarlat-chez-baptiste.digiylyfe.com/",
                         digiyQr: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAUoAAAFKAQAAAABTUiuoAAAB/klEQVR4nO2bQYrcMBBFX8WCXsqQA8xR5BvkSDnT3MA6Sg4QsJcBm5+FZLenJ4SehG4rpArajeS3+CBK9VXCJu6M/OleEhx11FFHHXX0kajVCJj1q8Fs5VFiaEmroyRJ0gQa54tsiJINdJIkvUUfI8DReyLU/7mH9FoHgjWIGQy65aECHP0L1Ib4w8gWsOEUAY7+JsL7qU72RAGO/sFqRQEzkMY1iPnzAjMcz86na3W0otnMzHqA+SIbABtYiyV8hgBH74mSW4cUyj22zb3tSp2u1VGKR0+SSBOQpjqnEYBY32o8XaujRwdPFJZflmDptYcksOLlHyjA0Y/nFoBGOmmMNa3qcDsie241gG67XpQ0xoXS0NAEJO1DX6020LoUmrqt8xQlSbWBUYqX161G0FK3rPziUoelbo1gSV632kF3B78G0mvA0rTu/Y01kK3zrm4z6LYTSoLdYByK1+R1qx1094RbCqWpqyevGu4JW0MlLbdevp6YN7/RjFZHr3fHEBfIPcAcfoE+RoCj98W181Rs/Biluh3u18bu4BtBb++OjbgG5b6DfHPNdbpWR29R6dtF9nVa7eoOnyrA0Y+guV+t1i06kV+W2tBoUOt/h767OyZ+D8pfJoDVDsT5Wh09+HbKoStKEJfag6/9XXcZTaDmXy046qijjjr6D6E/AR5kRJ2mFJDtAAAAAElFTkSuQmCC",
@@ -1759,7 +1767,8 @@
                             </div>
                             <div class="slide-caption">${s.caption}</div>`;
                     } else {
-                        const imageHtml = `<img src="${s.src}" alt="${s.alt}" loading="${i===0?'eager':'lazy'}">`;
+                        const base = s.src.replace(/\.(png|jpe?g)$/i, "");
+              const imageHtml = `<picture class="digiy-slide-picture"><source type="image/avif" srcset="${base}.avif"><source type="image/webp" srcset="${base}.webp"><img src="${s.src}" alt="${s.alt}" loading="${i===0?'eager':'lazy'}" decoding="async"></picture>`;
                         slide.innerHTML = `${imageHtml}<div class="slide-caption">${s.caption}</div>`;
                     }
                     track.appendChild(slide);
