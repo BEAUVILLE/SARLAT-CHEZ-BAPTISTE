@@ -2110,13 +2110,13 @@
 
                 // 1) Disponibilités : source de vérité du calendrier public.
                 try {
+                    // DIGIY PUBLIC RESERVATION SYNC V6 — filtre unique de période, sans doublon de paramètre day.
                     const params = new URLSearchParams({
                         select: "day,status",
                         unit_id: "eq." + CFG.masterUnitId,
-                        day: "gte." + todayIso,
+                        and: `(day.gte.${todayIso},day.lte.${CFG.lastDate})`,
                         order: "day.asc"
                     });
-                    params.append("day", "lte." + CFG.lastDate);
 
                     const response = await fetch(
                         SUPABASE_URL + "/rest/v1/digiy_loc_master_unit_calendar?" + params.toString(),
@@ -2202,17 +2202,44 @@
             window.DIGIY_SYNC_PUBLIC_LOC=refreshPublicLoc;
             refreshPublicLoc();
 
+            // DIGIY PUBLIC RESERVATION SYNC V6 — appliquer d'abord le signal proprio, puis confirmer par Supabase.
+            function applyPublicSyncPayload(payload){
+                if(!payload || payload.type!=='calendar-changed') return false;
+                if(payload.unitId && payload.unitId!==CFG.masterUnitId) return false;
+                const dates=Array.isArray(payload.dates)?payload.dates.filter(Boolean):[];
+                if(!dates.length) return false;
+                const blocked=new Set(CFG.blockedDates||[]);
+                const closed=new Set(CFG.closedDates||[]);
+                dates.forEach(day=>{
+                    if(payload.status==='occupied'){
+                        blocked.add(day);closed.delete(day);
+                    }else if(payload.status==='closed'){
+                        closed.add(day);blocked.delete(day);
+                    }else if(payload.status==='available'){
+                        blocked.delete(day);closed.delete(day);
+                    }
+                });
+                CFG.blockedDates=Array.from(blocked).sort();
+                CFG.closedDates=Array.from(closed).sort();
+                if(window.DIGIY_REFRESH_PUBLIC_CALENDAR) window.DIGIY_REFRESH_PUBLIC_CALENDAR();
+                return true;
+            }
+
             // Même appareil : notification immédiate depuis gestion.html.
             try{
                 const publicSyncChannel=new BroadcastChannel('digiy-loc-sarlat');
                 publicSyncChannel.addEventListener('message',event=>{
-                    if(event.data&&event.data.type==='calendar-changed')refreshPublicLoc();
+                    if(applyPublicSyncPayload(event.data)) refreshPublicLoc();
                 });
                 window.DIGIY_PUBLIC_SYNC_CHANNEL=publicSyncChannel;
             }catch(_){ }
 
             window.addEventListener('storage',event=>{
-                if(event.key==='digiy-loc-sarlat-sync')refreshPublicLoc();
+                if(event.key!=='digiy-loc-sarlat-sync') return;
+                let payload=null;
+                try{payload=event.newValue?JSON.parse(event.newValue):null;}catch(_){ }
+                applyPublicSyncPayload(payload);
+                refreshPublicLoc();
             });
 
             // Retour sur l’onglet : relecture immédiate de Supabase.
