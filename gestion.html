@@ -59,7 +59,35 @@ function syncBase(){const u=currentUnit();basePrice=Number(u&&u.base_price!=null
 async function sendCode(){const email=$('email').value.trim();if(!email)return msg(loginStatus,'⚠️ Indiquez votre email.',true);$('sendCode').disabled=true;msg(loginStatus,'Envoi du code…');const{error}=await db.auth.signInWithOtp({email,options:{shouldCreateUser:false,emailRedirectTo:location.origin+location.pathname}});$('sendCode').disabled=false;if(error)return msg(loginStatus,'⚠️ '+error.message,true);$('otpBlock').classList.remove('hidden');msg(loginStatus,'✓ Email envoyé. Entrez le code reçu.')}
 async function verifyCode(){const email=$('email').value.trim(),token=$('otp').value.trim();if(!email||!token)return msg(loginStatus,'⚠️ Email et code nécessaires.',true);$('verifyCode').disabled=true;const{data,error}=await db.auth.verifyOtp({email,token,type:'email'});$('verifyCode').disabled=false;if(error)return msg(loginStatus,'⚠️ Code invalide ou expiré.',true);await enter(data.session)}
 async function enter(session){if(!session)return showLogin();const{data:site,error}=await db.from('digiy_loc_master_sites').select('id,slug,display_name').eq('slug',SITE_SLUG).maybeSingle();if(error||!site){await db.auth.signOut();showLogin();return msg(loginStatus,'⚠️ Cet email n’est pas autorisé pour ce site.',true)}const{data,error:unitError}=await db.from('digiy_loc_master_units').select('id,slug,display_name,unit_type,sort_order,base_price,price_currency').eq('site_id',site.id).eq('is_active',true).order('sort_order').order('display_name');if(unitError||!data||!data.length){await db.auth.signOut();showLogin();return msg(loginStatus,'⚠️ Aucun hébergement actif.',true)}units=data;unitId=units[0].id;const s=$('unitSelect');s.innerHTML='';units.forEach(u=>{const o=document.createElement('option');o.value=u.id;o.textContent=u.display_name;s.appendChild(o)});s.value=unitId;$('unitField').classList.toggle('hidden',units.length<2);syncBase();showManager(session.user.email||'propriétaire');await loadData();render()}
-async function loadData(){if(!unitId)return;const from=iso(new Date(today().getFullYear(),today().getMonth(),1,12));const[stateResult,priceResult]=await Promise.all([db.from('digiy_loc_master_unit_calendar').select('day,status').eq('unit_id',unitId).gte('day',from).order('day'),db.from('digiy_loc_master_unit_prices').select('day,price_override').eq('unit_id',unitId).gte('day',from).order('day')]);if(stateResult.error)return msg(saveStatus,'⚠️ Lecture calendrier impossible : '+stateResult.error.message,true);if(priceResult.error)return msg(saveStatus,'⚠️ Lecture tarifs impossible : '+priceResult.error.message,true);states=new Map((stateResult.data||[]).map(r=>[r.day,r.status]));prices=new Map((priceResult.data||[]).map(r=>[r.day,Number(r.price_override)]))}
+// DIGIY OWNER STATE LOAD V3 — les états se relisent indépendamment des tarifs.
+async function loadData(){
+  if(!unitId)return;
+  const from=iso(new Date(today().getFullYear(),today().getMonth(),1,12));
+
+  const stateResult=await db.from('digiy_loc_master_unit_calendar')
+    .select('day,status')
+    .eq('unit_id',unitId)
+    .gte('day',from)
+    .order('day');
+
+  if(stateResult.error){
+    msg(saveStatus,'⚠️ Lecture calendrier impossible : '+stateResult.error.message,true);
+    return;
+  }
+
+  states=new Map((stateResult.data||[]).map(r=>[r.day,r.status]));
+
+  // Les tarifs ne doivent jamais empêcher la restitution de Libre / Occupé / Fermé.
+  const priceResult=await db.from('digiy_loc_master_unit_prices')
+    .select('day,price_override')
+    .eq('unit_id',unitId)
+    .gte('day',from)
+    .order('day');
+
+  if(!priceResult.error){
+    prices=new Map((priceResult.data||[]).map(r=>[r.day,Number(r.price_override)]));
+  }
+}
 function updateSelection(){if(!start)return $('selectionLabel').textContent='Sélection : aucune date';$('selectionLabel').textContent=end&&iso(end)!==iso(start)?'Sélection : '+fmt(start)+' → '+fmt(end):'Sélection : '+fmt(start)}
 function resetSelection(){start=null;end=null;updateSelection()}
 function choose(date){if(date<today())return;if(!start||end){start=date;end=null}else if(date<start){end=start;start=date}else end=date;updateSelection();render()}
