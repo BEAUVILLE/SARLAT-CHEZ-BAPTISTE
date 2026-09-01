@@ -177,10 +177,14 @@
   async function loadStates(){
     if(!unitId)return;
     const from=iso(new Date(today().getFullYear(),today().getMonth(),1,12));
-    const {data,error}=await db.from('digiy_loc_master_unit_calendar').select('day,status,price_override').eq('unit_id',unitId).gte('day',from).order('day');
-    if(error){setMsg(saveStatus,'⚠️ Lecture calendrier impossible : '+error.message,true);return;}
-    states=new Map((data||[]).map(r=>[r.day,r.status]));
-    prices=new Map((data||[]).filter(r=>r.price_override!=null).map(r=>[r.day,Number(r.price_override)]));
+    const [stateResult,priceResult]=await Promise.all([
+      db.from('digiy_loc_master_unit_calendar').select('day,status').eq('unit_id',unitId).gte('day',from).order('day'),
+      db.from('digiy_loc_master_unit_prices').select('day,price_override').eq('unit_id',unitId).gte('day',from).order('day')
+    ]);
+    if(stateResult.error){setMsg(saveStatus,'⚠️ Lecture calendrier impossible : '+stateResult.error.message,true);return;}
+    if(priceResult.error){setMsg(saveStatus,'⚠️ Lecture tarifs impossible : '+priceResult.error.message,true);return;}
+    states=new Map((stateResult.data||[]).map(r=>[r.day,r.status]));
+    prices=new Map((priceResult.data||[]).map(r=>[r.day,Number(r.price_override)]));
   }
 
   function resetSelection(){start=null;end=null;updateSelection();}
@@ -218,8 +222,13 @@
     const dates=selectedDates(); if(!dates.length)return setMsg(saveStatus,'⚠️ Sélectionnez une date ou une période.',true);
     if(!unitId)return setMsg(saveStatus,'⚠️ Aucun hébergement sélectionné.',true);
     setMsg(saveStatus,'Enregistrement…');
-    const rows=dates.map(day=>({unit_id:unitId,day,status,price_override:prices.has(day)?prices.get(day):null,updated_at:new Date().toISOString()}));
-    const {error}=await db.from('digiy_loc_master_unit_calendar').upsert(rows,{onConflict:'unit_id,day'});
+    let error=null;
+    if(status==='available'){
+      ({error}=await db.from('digiy_loc_master_unit_calendar').delete().eq('unit_id',unitId).in('day',dates));
+    }else{
+      const rows=dates.map(day=>({unit_id:unitId,day,status,updated_at:new Date().toISOString()}));
+      ({error}=await db.from('digiy_loc_master_unit_calendar').upsert(rows,{onConflict:'unit_id,day'}));
+    }
     if(error)return setMsg(saveStatus,'⚠️ Enregistrement refusé : '+error.message,true);
     await loadStates(); resetSelection(); render();
     setMsg(saveStatus,'✓ Calendrier enregistré.');
@@ -230,32 +239,42 @@
     if(!Number.isFinite(value)||value<0)return setMsg(saveStatus,'⚠️ Indiquez un tarif de base valide.',true);
     if(!unitId)return setMsg(saveStatus,'⚠️ Aucun hébergement sélectionné.',true);
     setMsg(saveStatus,'Enregistrement du tarif de base…');
-    const {error}=await db.from('digiy_loc_master_units').update({base_price:value,price_currency:currency||'EUR'}).eq('id',unitId);
+    const {data,error}=await db.from('digiy_loc_master_units')
+      .update({base_price:value,price_currency:currency||'EUR',updated_at:new Date().toISOString()})
+      .eq('id',unitId)
+      .select('id,base_price,price_currency')
+      .maybeSingle();
     if(error)return setMsg(saveStatus,'⚠️ Tarif de base refusé : '+error.message,true);
-    const unit=currentUnit(); if(unit){unit.base_price=value;unit.price_currency=currency||'EUR';}
-    basePrice=value; syncBasePrice(); render();
-    setMsg(saveStatus,'✓ Tarif de base enregistré : '+money(value)+'.');
+    if(!data)return setMsg(saveStatus,'⚠️ Le tarif de base n’a pas été confirmé par la base.',true);
+    const unit=currentUnit(); if(unit){unit.base_price=Number(data.base_price);unit.price_currency=data.price_currency||currency||'EUR';}
+    basePrice=Number(data.base_price); currency=data.price_currency||currency||'EUR'; syncBasePrice(); render();
+    setMsg(saveStatus,'✓ Tarif de base enregistré en base : '+money(basePrice)+'.');
   }
 
   async function applySpecialPrice(){
     const dates=selectedDates(); if(!dates.length)return setMsg(saveStatus,'⚠️ Sélectionnez une date ou une période.',true);
-    const value=Number($('specialPrice').value);
+    const value=Number(String($('specialPrice').value).replace(',','.'));
     if(!Number.isFinite(value)||value<0)return setMsg(saveStatus,'⚠️ Indiquez un prix spécial valide.',true);
     setMsg(saveStatus,'Enregistrement du prix…');
-    const rows=dates.map(day=>({unit_id:unitId,day,status:states.get(day)||'available',price_override:value,updated_at:new Date().toISOString()}));
-    const {error}=await db.from('digiy_loc_master_unit_calendar').upsert(rows,{onConflict:'unit_id,day'});
+    const rows=dates.map(day=>({unit_id:unitId,day,price_override:value,updated_at:new Date().toISOString()}));
+    const {data,error}=await db.from('digiy_loc_master_unit_prices')
+      .upsert(rows,{onConflict:'unit_id,day'})
+      .select('day,price_override');
     if(error)return setMsg(saveStatus,'⚠️ Prix refusé : '+error.message,true);
-    await loadStates(); render();
-    setMsg(saveStatus,'✓ Prix '+money(value)+' appliqué à '+dates.length+(dates.length===1?' journée.':' journées.'));
+    if(!data||data.length!==dates.length)return setMsg(saveStatus,'⚠️ Le prix n’a pas été confirmé pour toute la sélection.',true);
+    data.forEach(row=>prices.set(row.day,Number(row.price_override)));
+    render();
+    const zone=dates.length===1?fmt(parse(dates[0])):fmt(parse(dates[0]))+' → '+fmt(parse(dates[dates.length-1]));
+    setMsg(saveStatus,'✓ Prix enregistré en base : '+money(value)+' · '+zone+'.');
   }
 
   async function clearSpecialPrice(){
     const dates=selectedDates(); if(!dates.length)return setMsg(saveStatus,'⚠️ Sélectionnez une date ou une période.',true);
     setMsg(saveStatus,'Retour au tarif de base…');
-    const rows=dates.map(day=>({unit_id:unitId,day,status:states.get(day)||'available',price_override:null,updated_at:new Date().toISOString()}));
-    const {error}=await db.from('digiy_loc_master_unit_calendar').upsert(rows,{onConflict:'unit_id,day'});
+    const {error}=await db.from('digiy_loc_master_unit_prices').delete().eq('unit_id',unitId).in('day',dates);
     if(error)return setMsg(saveStatus,'⚠️ Retour au tarif de base refusé : '+error.message,true);
-    await loadStates(); render();
+    dates.forEach(day=>prices.delete(day));
+    render();
     setMsg(saveStatus,'✓ Tarif de base rétabli sur la sélection.');
   }
 
