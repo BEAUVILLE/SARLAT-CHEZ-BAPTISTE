@@ -1348,8 +1348,8 @@
                     <h1>SARLAT <em>CHEZ BAPTISTE</em></h1>
                     <p class="tagline">Chambre privée à Sarlat · réservation directe avec le propriétaire.</p>
                     <div class="price-block-hero">
-                        <strong>78 € / nuitée</strong>
-                        <span>≈ 51 165 FCFA</span>
+                        <strong id="publicHeroPrice">78 € / nuitée</strong>
+                        <span id="publicHeroPriceXof">≈ 51 165 FCFA</span>
                     </div>
                     <div class="actions">
                         <a class="btn btn-primary" href="#reservation">Faire une demande directe →</a>
@@ -1482,7 +1482,7 @@
                             <li>✓ Arrivée de 16 h à 22 h</li>
                             <li>✓ Départ de 8 h à 10 h</li>
                             <li>✓ Maximum : 2 voyageurs</li>
-                            <li>✓ 78 € ≈ 51 165 FCFA / nuitée</li>
+                            <li id="publicSummaryPrice">✓ 78 € ≈ 51 165 FCFA / nuitée</li>
                             <li>✓ Confirmation écrite obligatoire</li>
                             <li>✓ Paiement ensuite par Sendwave</li>
                         </ul>
@@ -1579,6 +1579,8 @@
                 address: "3 rue du Troubadour Cairels, 24200 Sarlat-la-Canéda, France",
                 eur: 78,
                 xof: 51165,
+                eurToXof: 655.957,
+                priceOverrides: {},
                 lastDate: "2026-10-30",
                 masterUnitId: "8e197c74-c789-4ca7-8e95-1927cc617960",
                 closedDates: [],
@@ -1603,6 +1605,51 @@
                     { start: "2026-09-29", end: "2026-09-29", label: "29 septembre 2026" }
                 ]
             };
+
+            // DIGIY PUBLIC LOC SYNC V1
+            function locIsoDate(date) {
+                return date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0");
+            }
+
+            function priceForIso(day) {
+                const hasOverride = CFG.priceOverrides && Object.prototype.hasOwnProperty.call(CFG.priceOverrides, day);
+                const value = hasOverride ? Number(CFG.priceOverrides[day]) : Number(CFG.eur);
+                return Number.isFinite(value) && value >= 0 ? value : Number(CFG.eur) || 0;
+            }
+
+            function stayTotalEUR(arrivalIso, departureIso) {
+                if (!arrivalIso || !departureIso) return 0;
+                const cursor = new Date(arrivalIso + "T12:00:00");
+                const departure = new Date(departureIso + "T12:00:00");
+                if (!Number.isFinite(cursor.getTime()) || !Number.isFinite(departure.getTime()) || cursor >= departure) return 0;
+                let total = 0;
+                while (cursor < departure) {
+                    total += priceForIso(locIsoDate(cursor));
+                    cursor.setDate(cursor.getDate() + 1);
+                }
+                return total;
+            }
+
+            function eurText(value) {
+                const n = Number(value) || 0;
+                return n.toLocaleString("fr-FR", { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 }) + " €";
+            }
+
+            function xofFromEur(value) {
+                return Math.round((Number(value) || 0) * CFG.eurToXof);
+            }
+
+            function refreshPublicBasePrice() {
+                const base = Number(CFG.eur) || 0;
+                const xof = xofFromEur(base);
+                CFG.xof = xof;
+                const hero = document.getElementById("publicHeroPrice");
+                const heroXof = document.getElementById("publicHeroPriceXof");
+                const summary = document.getElementById("publicSummaryPrice");
+                if (hero) hero.textContent = eurText(base) + " / nuitée";
+                if (heroXof) heroXof.textContent = "≈ " + xof.toLocaleString("fr-FR") + " FCFA";
+                if (summary) summary.textContent = "✓ " + eurText(base) + " ≈ " + xof.toLocaleString("fr-FR") + " FCFA / nuitée";
+            }
 
             // ===== DISPONIBILITÉS VISIBLES — MASTER SUPABASE + REPLI LOCAL =====
             function localIso(date) {
@@ -1937,16 +1984,20 @@
                     if (start && end && n > 0) {
                         dateRange.textContent = "📅 " + formatDate(start) + " → " + formatDate(end);
                         nightsDisplay.textContent = "🛏️ " + plural(n, "nuit", "nuits");
-                        const total = estimatePrice(n);
+                        const startIso = iso(start);
+                        const endIso = iso(end);
+                        const totalEur = stayTotalEUR(startIso, endIso);
+                        const totalXof = xofFromEur(totalEur);
                         estimateEl.innerHTML =
-                            `<strong>${n} nuitée(s) : ${(n * CFG.eur).toLocaleString("fr-FR")} €</strong><span>Estimation : ${total.toLocaleString("fr-FR")} FCFA</span>`;
-                        if (arrivalInput) arrivalInput.value = iso(start);
-                        if (departureInput) departureInput.value = iso(end);
+                            `<strong>${n} nuitée${n > 1 ? "s" : ""} : ${eurText(totalEur)}</strong><span>≈ ${totalXof.toLocaleString("fr-FR")} FCFA · tarifs synchronisés</span>`;
+                        if (arrivalInput) arrivalInput.value = startIso;
+                        if (departureInput) departureInput.value = endIso;
                     } else {
                         dateRange.textContent = "📅 Sélectionnez vos dates";
                         nightsDisplay.textContent = "🛏️ —";
+                        const baseXof = xofFromEur(CFG.eur);
                         estimateEl.innerHTML =
-                            `<strong>78 € / nuitée</strong><span>≈ 51 165 FCFA · choisissez vos dates.</span>`;
+                            `<strong>${eurText(CFG.eur)} / nuitée</strong><span>≈ ${baseXof.toLocaleString("fr-FR")} FCFA · choisissez vos dates.</span>`;
                     }
                 }
 
@@ -2042,19 +2093,45 @@
                     );
 
                     const todayIso = localIso(new Date());
-                    const { data, error } = await publicDb
-                        .from("digiy_loc_master_unit_calendar")
-                        .select("day,status")
-                        .eq("unit_id", CFG.masterUnitId)
-                        .gte("day", todayIso)
-                        .lte("day", CFG.lastDate)
-                        .order("day");
+                    const [calendarResult, unitResult, priceResult] = await Promise.all([
+                        publicDb
+                            .from("digiy_loc_master_unit_calendar")
+                            .select("day,status")
+                            .eq("unit_id", CFG.masterUnitId)
+                            .gte("day", todayIso)
+                            .lte("day", CFG.lastDate)
+                            .order("day"),
+                        publicDb
+                            .from("digiy_loc_master_units")
+                            .select("base_price,price_currency")
+                            .eq("id", CFG.masterUnitId)
+                            .single(),
+                        publicDb
+                            .from("digiy_loc_master_unit_prices")
+                            .select("day,price_override")
+                            .eq("unit_id", CFG.masterUnitId)
+                            .gte("day", todayIso)
+                            .lte("day", CFG.lastDate)
+                            .order("day")
+                    ]);
 
-                    if (error) throw error;
+                    if (calendarResult.error) throw calendarResult.error;
+                    if (unitResult.error) throw unitResult.error;
+                    if (priceResult.error) throw priceResult.error;
 
-                    const rows = Array.isArray(data) ? data : [];
+                    const rows = Array.isArray(calendarResult.data) ? calendarResult.data : [];
+                    const priceRows = Array.isArray(priceResult.data) ? priceResult.data : [];
+                    const liveBase = Number(unitResult.data && unitResult.data.base_price);
+                    if (Number.isFinite(liveBase) && liveBase >= 0) CFG.eur = liveBase;
+                    CFG.priceOverrides = Object.fromEntries(
+                        priceRows
+                            .filter(row => row && row.day && Number.isFinite(Number(row.price_override)))
+                            .map(row => [row.day, Number(row.price_override)])
+                    );
+
                     CFG.blockedDates = rows.filter(row => row.status === "occupied").map(row => row.day);
                     CFG.closedDates = rows.filter(row => row.status === "closed").map(row => row.day);
+                    refreshPublicBasePrice();
 
                     if (window.DIGIY_RENDER_AVAILABILITY) {
                         window.DIGIY_RENDER_AVAILABILITY(rows);
@@ -2064,6 +2141,7 @@
                     }
                 } catch (error) {
                     console.warn("[SARLAT MASTER] Lecture Supabase indisponible, repli local conservé.", error);
+                    refreshPublicBasePrice();
                 }
             })();
 
@@ -2089,6 +2167,8 @@
 
                     const n = Math.round((new Date(d + "T12:00") - new Date(a + "T12:00")) / 86400000);
                     if (n <= 0) throw new Error("La date de départ doit être après l'arrivée.");
+                    const totalEur = stayTotalEUR(a, d);
+                    const totalXof = xofFromEur(totalEur);
 
                     return [
                         "Bonjour Baptiste,", "",
@@ -2099,8 +2179,7 @@
                         "Nom : " + name,
                         "Contact : " + contact,
                         "Heure d'arrivée : " + time,
-                        "Estimation : " + (n * 78).toLocaleString("fr-FR") + " € / " + (n * 51165).toLocaleString(
-                        "fr-FR") + " FCFA",
+                        "Estimation : " + eurText(totalEur) + " / " + totalXof.toLocaleString("fr-FR") + " FCFA",
                         "Paiement après confirmation : Sendwave — Pays : Sénégal — JB BRAUVILLE — +221 77 134 28 89",
                         "Message : " + msg,
                         "",
