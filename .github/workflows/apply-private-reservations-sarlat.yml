@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'tools/patch-private-reservations-sarlat.py'
+      - 'tools/fix-private-reservation-sync-sarlat.py'
       - '.github/workflows/apply-private-reservations-sarlat.yml'
   workflow_dispatch:
 
@@ -20,6 +21,8 @@ jobs:
           ref: main
       - name: Ajouter la fiche réservation privée
         run: python3 tools/patch-private-reservations-sarlat.py
+      - name: Vérifier Occupé et synchroniser le public
+        run: python3 tools/fix-private-reservation-sync-sarlat.py
       - name: Publier uniquement la gestion propriétaire
         run: |
           if git diff --quiet -- gestion.html; then
@@ -29,5 +32,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add gestion.html
-          git commit -m "Ajouter les réservations privées propriétaire Sarlat"
+          git commit -m "Vérifier la réservation privée Sarlat de bout en bout"
           git push
