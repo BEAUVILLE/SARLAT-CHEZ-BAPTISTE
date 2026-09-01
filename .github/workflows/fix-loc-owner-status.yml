@@ -21,36 +21,38 @@ jobs:
           from pathlib import Path
           import re
 
-          p=Path('gestion.html')
-          s=p.read_text(encoding='utf-8')
-          pattern=re.compile(r"async function applyState\(status\)\{.*?\}\nasync function saveBasePrice", re.S)
-          replacement="""async function applyState(status){
-  const dates=selectedDates();
-  if(!dates.length)return msg(saveStatus,'⚠️ Sélectionnez une date ou une période.',true);
-  if(!unitId)return msg(saveStatus,'⚠️ Aucun hébergement sélectionné.',true);
-  msg(saveStatus,'Enregistrement de l’état…');
-  const {data,error}=await db.rpc('digiy_loc_set_unit_calendar_state_v2',{
-    p_unit_id:unitId,
-    p_days:dates,
-    p_status:status
-  });
-  if(error)return msg(saveStatus,'⚠️ État refusé : '+error.message,true);
-  const rows=Array.isArray(data)?data:[];
-  if(rows.length!==dates.length)return msg(saveStatus,'⚠️ Réponse incomplète de la base.',true);
-  rows.forEach(row=>{
-    if(row.status==='available')states.delete(row.day);
-    else states.set(row.day,row.status);
-  });
-  const label=status==='available'?'Disponible':status==='occupied'?'Occupé':'Fermé';
-  msg(saveStatus,'✓ '+label+' enregistré sur '+dates.length+(dates.length===1?' date.':' dates.'));
-  resetSelection();
-  render();
-}
-async function saveBasePrice"""
-          s2,n=pattern.subn(replacement,s,count=1)
-          if n!=1:
-            raise SystemExit('applyState introuvable')
-          p.write_text(s2,encoding='utf-8')
+          p = Path('gestion.html')
+          s = p.read_text(encoding='utf-8')
+          pattern = re.compile(r"async function applyState\(status\)\{.*?\}\nasync function saveBasePrice", re.S)
+          replacement = (
+              "async function applyState(status){\n"
+              "  const dates=selectedDates();\n"
+              "  if(!dates.length)return msg(saveStatus,'⚠️ Sélectionnez une date ou une période.',true);\n"
+              "  if(!unitId)return msg(saveStatus,'⚠️ Aucun hébergement sélectionné.',true);\n"
+              "  msg(saveStatus,'Enregistrement de l’état…');\n"
+              "  const {data,error}=await db.rpc('digiy_loc_set_unit_calendar_state_v2',{\n"
+              "    p_unit_id:unitId,\n"
+              "    p_days:dates,\n"
+              "    p_status:status\n"
+              "  });\n"
+              "  if(error)return msg(saveStatus,'⚠️ État refusé : '+error.message,true);\n"
+              "  const rows=Array.isArray(data)?data:[];\n"
+              "  if(rows.length!==dates.length)return msg(saveStatus,'⚠️ Réponse incomplète de la base.',true);\n"
+              "  rows.forEach(row=>{\n"
+              "    if(row.status==='available')states.delete(row.day);\n"
+              "    else states.set(row.day,row.status);\n"
+              "  });\n"
+              "  const label=status==='available'?'Disponible':status==='occupied'?'Occupé':'Fermé';\n"
+              "  msg(saveStatus,'✓ '+label+' enregistré sur '+dates.length+(dates.length===1?' date.':' dates.'));\n"
+              "  resetSelection();\n"
+              "  render();\n"
+              "}\n"
+              "async function saveBasePrice"
+          )
+          s2, n = pattern.subn(replacement, s, count=1)
+          if n != 1:
+              raise SystemExit('applyState introuvable')
+          p.write_text(s2, encoding='utf-8')
           PY
       - name: Commit
         shell: bash
