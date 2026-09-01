@@ -1,4 +1,4 @@
-const CACHE = "sarlat-chez-baptiste-v1-20260819";
+const CACHE = "sarlat-chez-baptiste-v2-20260901";
 const CORE = [
   "./",
   "./index.html",
@@ -10,9 +10,9 @@ const CORE = [
 
 self.addEventListener("install", event => {
   event.waitUntil(
-    caches.open(CACHE).then(cache =>
-      Promise.allSettled(CORE.map(url => cache.add(url)))
-    ).then(() => self.skipWaiting())
+    caches.open(CACHE)
+      .then(cache => Promise.allSettled(CORE.map(url => cache.add(url))))
+      .then(() => self.skipWaiting())
   );
 });
 
@@ -28,9 +28,13 @@ self.addEventListener("fetch", event => {
   const request = event.request;
   if (request.method !== "GET") return;
 
-  if (request.mode === "navigate") {
+  const url = new URL(request.url);
+  const sameOrigin = url.origin === self.location.origin;
+  const freshCode = sameOrigin && (request.mode === "navigate" || ["script", "style", "document"].includes(request.destination));
+
+  if (freshCode) {
     event.respondWith(
-      fetch(request)
+      fetch(request, { cache: "no-store" })
         .then(response => {
           const copy = response.clone();
           caches.open(CACHE).then(cache => cache.put(request, copy));
