@@ -116,6 +116,15 @@ async function applyState(status){
     resetSelection();
     render();
     msg(saveStatus,'✓ '+label+' confirmé en base sur '+dates.length+(dates.length===1?' date.':' dates.'));
+
+    // DIGIY OWNER PUBLIC SYNC V3 — prévenir immédiatement une fiche publique déjà ouverte.
+    const syncPayload={type:'calendar-changed',unitId,dates,status,ts:Date.now()};
+    try{
+      const channel=new BroadcastChannel('digiy-loc-sarlat');
+      channel.postMessage(syncPayload);
+      channel.close();
+    }catch(_){ }
+    try{localStorage.setItem('digiy-loc-sarlat-sync',JSON.stringify(syncPayload));}catch(_){ }
   }finally{
     buttons.forEach(button=>button.disabled=false);
   }
