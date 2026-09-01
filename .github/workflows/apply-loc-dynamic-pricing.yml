@@ -1,0 +1,415 @@
+name: Appliquer la tarification dynamique LOC
+
+on:
+  push:
+    paths:
+      - .github/workflows/apply-loc-dynamic-pricing.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sarlat-loc-dynamic-pricing
+  cancel-in-progress: true
+
+jobs:
+  patch-pricing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ajouter prix de base et prix par date
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          # ============================================================
+          # 1) ESPACE PROPRIETAIRE — gestion.html
+          # ============================================================
+          path = Path('gestion.html')
+          html = path.read_text(encoding='utf-8')
+
+          if 'id="basePrice"' not in html:
+              html = html.replace(
+                  '@media(max-width:560px){.state-actions{grid-template-columns:1fr}',
+                  '.pricing{margin-top:14px;padding:14px;border:1px solid #d8c8b6;border-radius:18px;background:#fffaf1}.pricing-title{font-weight:1000;font-size:15px}.pricing-note{margin-top:5px;color:#6e5845;font-size:12px;font-weight:750;line-height:1.45}.price-grid{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:end}.price-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.price-current{margin-top:8px;font-size:12px;font-weight:950;color:#315b43}.day{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;line-height:1}.day .day-price{font-size:9px;font-weight:1000;opacity:.82;white-space:nowrap}@media(max-width:560px){.price-grid{grid-template-columns:1fr}.state-actions{grid-template-columns:1fr}',
+                  1,
+              )
+
+              html = html.replace(
+                  'Connectez-vous pour ouvrir, occuper ou fermer des dates.',
+                  'Connectez-vous pour ouvrir, occuper ou fermer des dates, et régler vos tarifs.',
+                  1,
+              )
+              html = html.replace(
+                  'Cliquez une date pour la sélectionner. Cliquez une seconde date pour sélectionner toute la période. Puis choisissez son état.',
+                  'Cliquez une date pour agir jour par jour, ou une seconde date pour sélectionner toute une période. Vous pouvez ensuite changer son état ou son tarif.',
+                  1,
+              )
+
+              unit_block = '''    <div class="field hidden" id="unitField">
+      <label for="unitSelect">Hébergement / chambre</label>
+      <select id="unitSelect"></select>
+    </div>'''
+              base_block = unit_block + '''
+
+    <div class="pricing" id="basePricing">
+      <div class="pricing-title">💶 Tarif de base</div>
+      <p class="pricing-note">Ce tarif s'applique automatiquement à toutes les nuits qui n'ont pas de prix spécial.</p>
+      <div class="price-grid">
+        <div class="field" style="margin-top:8px">
+          <label for="basePrice">Tarif de base / nuitée</label>
+          <input id="basePrice" type="number" min="0" step="0.01" inputmode="decimal" placeholder="78">
+        </div>
+        <button class="btn dark" id="saveBasePrice" type="button">Enregistrer le tarif de base</button>
+      </div>
+      <div class="price-current" id="basePriceInfo"></div>
+    </div>'''
+              if unit_block not in html:
+                  raise SystemExit('Bloc unitField introuvable dans gestion.html')
+              html = html.replace(unit_block, base_block, 1)
+
+              state_block = '''    <div class="state-actions">
+      <button class="freeBtn" id="makeAvailable" type="button">🟢 Disponible</button>
+      <button class="occBtn" id="makeOccupied" type="button">🔴 Occupé</button>
+      <button class="closeBtn" id="makeClosed" type="button">⚫ Fermé</button>
+    </div>'''
+              special_block = state_block + '''
+
+    <div class="pricing" id="specialPricing">
+      <div class="pricing-title">🏷️ Prix de la sélection</div>
+      <p class="pricing-note"><strong>1 date</strong> = tarif du jour · <strong>2 dates</strong> = tarif appliqué à toute la période sélectionnée.</p>
+      <div class="price-grid">
+        <div class="field" style="margin-top:8px">
+          <label for="specialPrice">Prix spécial / nuitée</label>
+          <input id="specialPrice" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Ex. 95">
+        </div>
+        <button class="btn primary" id="applySpecialPrice" type="button">Appliquer ce prix</button>
+      </div>
+      <div class="price-actions">
+        <button class="btn ghost" id="clearSpecialPrice" type="button">↩ Revenir au tarif de base</button>
+      </div>
+      <p class="pricing-note">Priorité : <strong>prix du jour / période → tarif de base</strong>. Les états Disponible, Occupé et Fermé restent indépendants.</p>
+    </div>'''
+              if state_block not in html:
+                  raise SystemExit('Bloc state-actions introuvable dans gestion.html')
+              html = html.replace(state_block, special_block, 1)
+
+              html = html.replace(
+                  'let siteId=null, units=[], unitId=null, current=new Date(), states=new Map(), start=null, end=null;',
+                  "let siteId=null, units=[], unitId=null, current=new Date(), states=new Map(), prices=new Map(), basePrice=78, currency='EUR', start=null, end=null;",
+                  1,
+              )
+
+              html = html.replace(
+                  "const selectedDates = () => start ? between(start,end||start) : [];",
+                  """const selectedDates = () => start ? between(start,end||start) : [];
+  const money = value => { const n=Number(value); return Number.isFinite(n) ? n.toLocaleString('fr-FR',{maximumFractionDigits:2})+' '+(currency==='EUR'?'€':currency) : '—'; };
+  function currentUnit(){return units.find(unit=>unit.id===unitId)||null;}
+  function syncBasePrice(){
+    const unit=currentUnit();
+    basePrice=Number(unit&&unit.base_price!=null?unit.base_price:78);
+    currency=(unit&&unit.price_currency)||'EUR';
+    $('basePrice').value=Number.isFinite(basePrice)?basePrice:'';
+    $('basePriceInfo').textContent='Tarif de base actuel : '+money(basePrice);
+  }""",
+                  1,
+              )
+
+              html = html.replace(
+                  ".select('id,slug,display_name,unit_type,sort_order')",
+                  ".select('id,slug,display_name,unit_type,sort_order,base_price,price_currency')",
+                  1,
+              )
+              html = html.replace(
+                  "$('unitField').classList.toggle('hidden',units.length<2);",
+                  "$('unitField').classList.toggle('hidden',units.length<2);\n    syncBasePrice();",
+                  1,
+              )
+
+              old_load = """  async function loadStates(){
+    if(!unitId)return;
+    const from=iso(new Date(today().getFullYear(),today().getMonth(),1,12));
+    const {data,error}=await db.from('digiy_loc_master_unit_calendar').select('day,status').eq('unit_id',unitId).gte('day',from).order('day');
+    if(error){setMsg(saveStatus,'⚠️ Lecture calendrier impossible : '+error.message,true);return;}
+    states=new Map((data||[]).map(r=>[r.day,r.status]));
+  }"""
+              new_load = """  async function loadStates(){
+    if(!unitId)return;
+    const from=iso(new Date(today().getFullYear(),today().getMonth(),1,12));
+    const {data,error}=await db.from('digiy_loc_master_unit_calendar').select('day,status,price_override').eq('unit_id',unitId).gte('day',from).order('day');
+    if(error){setMsg(saveStatus,'⚠️ Lecture calendrier impossible : '+error.message,true);return;}
+    states=new Map((data||[]).map(r=>[r.day,r.status]));
+    prices=new Map((data||[]).filter(r=>r.price_override!=null).map(r=>[r.day,Number(r.price_override)]));
+  }"""
+              if old_load not in html:
+                  raise SystemExit('Fonction loadStates attendue introuvable')
+              html = html.replace(old_load, new_load, 1)
+
+              old_day = "b.type='button';b.className='day';b.textContent=d;b.dataset.date=key;"
+              new_day = "b.type='button';b.className='day';b.dataset.date=key;const shownPrice=prices.has(key)?prices.get(key):basePrice;b.innerHTML='<span>'+d+'</span><small class=\"day-price\">'+money(shownPrice)+'</small>';"
+              if old_day not in html:
+                  raise SystemExit('Rendu cellule calendrier attendu introuvable')
+              html = html.replace(old_day, new_day, 1)
+
+              apply_pattern = re.compile(r"  async function applyState\(status\)\{.*?\n  \}\n\n  \$\('sendCode'\)", re.S)
+              apply_replacement = """  async function applyState(status){
+    const dates=selectedDates(); if(!dates.length)return setMsg(saveStatus,'⚠️ Sélectionnez une date ou une période.',true);
+    if(!unitId)return setMsg(saveStatus,'⚠️ Aucun hébergement sélectionné.',true);
+    setMsg(saveStatus,'Enregistrement…');
+    let error=null;
+    if(status==='available'){
+      const keep=dates.filter(day=>prices.has(day));
+      const remove=dates.filter(day=>!prices.has(day));
+      if(remove.length){({error}=await db.from('digiy_loc_master_unit_calendar').delete().eq('unit_id',unitId).in('day',remove));}
+      if(!error&&keep.length){
+        const rows=keep.map(day=>({unit_id:unitId,day,status:'available',price_override:prices.get(day),updated_at:new Date().toISOString()}));
+        ({error}=await db.from('digiy_loc_master_unit_calendar').upsert(rows,{onConflict:'unit_id,day'}));
+      }
+    } else {
+      const rows=dates.map(day=>({unit_id:unitId,day,status,price_override:prices.has(day)?prices.get(day):null,updated_at:new Date().toISOString()}));
+      ({error}=await db.from('digiy_loc_master_unit_calendar').upsert(rows,{onConflict:'unit_id,day'}));
+    }
+    if(error)return setMsg(saveStatus,'⚠️ Enregistrement refusé : '+error.message,true);
+    await loadStates(); resetSelection(); render();
+    setMsg(saveStatus,'✓ Calendrier enregistré. La fiche publique utilise maintenant cet état.');
+  }
+
+  async function saveBasePrice(){
+    const value=Number($('basePrice').value);
+    if(!Number.isFinite(value)||value<0)return setMsg(saveStatus,'⚠️ Indiquez un tarif de base valide.',true);
+    if(!unitId)return setMsg(saveStatus,'⚠️ Aucun hébergement sélectionné.',true);
+    setMsg(saveStatus,'Enregistrement du tarif de base…');
+    const {error}=await db.from('digiy_loc_master_units').update({base_price:value,price_currency:currency||'EUR'}).eq('id',unitId);
+    if(error)return setMsg(saveStatus,'⚠️ Tarif de base refusé : '+error.message,true);
+    const unit=currentUnit();if(unit){unit.base_price=value;unit.price_currency=currency||'EUR';}
+    basePrice=value;syncBasePrice();render();
+    setMsg(saveStatus,'✓ Tarif de base enregistré : '+money(value)+'.');
+  }
+
+  async function applySpecialPrice(){
+    const dates=selectedDates();if(!dates.length)return setMsg(saveStatus,'⚠️ Sélectionnez une date ou une période.',true);
+    const value=Number($('specialPrice').value);
+    if(!Number.isFinite(value)||value<0)return setMsg(saveStatus,'⚠️ Indiquez un prix spécial valide.',true);
+    setMsg(saveStatus,'Enregistrement du prix…');
+    const rows=dates.map(day=>({unit_id:unitId,day,status:(states.get(day)==='occupied'||states.get(day)==='closed')?states.get(day):'available',price_override:value,updated_at:new Date().toISOString()}));
+    const {error}=await db.from('digiy_loc_master_unit_calendar').upsert(rows,{onConflict:'unit_id,day'});
+    if(error)return setMsg(saveStatus,'⚠️ Prix refusé : '+error.message,true);
+    await loadStates();render();
+    setMsg(saveStatus,'✓ Prix '+money(value)+' appliqué à '+dates.length+(dates.length===1?' journée.':' journées.'));
+  }
+
+  async function clearSpecialPrice(){
+    const dates=selectedDates();if(!dates.length)return setMsg(saveStatus,'⚠️ Sélectionnez une date ou une période.',true);
+    setMsg(saveStatus,'Retour au tarif de base…');
+    const keep=dates.filter(day=>states.get(day)==='occupied'||states.get(day)==='closed');
+    const remove=dates.filter(day=>!keep.includes(day));
+    let error=null;
+    if(remove.length){({error}=await db.from('digiy_loc_master_unit_calendar').delete().eq('unit_id',unitId).in('day',remove));}
+    if(!error&&keep.length){
+      const rows=keep.map(day=>({unit_id:unitId,day,status:states.get(day),price_override:null,updated_at:new Date().toISOString()}));
+      ({error}=await db.from('digiy_loc_master_unit_calendar').upsert(rows,{onConflict:'unit_id,day'}));
+    }
+    if(error)return setMsg(saveStatus,'⚠️ Retour au tarif de base refusé : '+error.message,true);
+    await loadStates();render();
+    setMsg(saveStatus,'✓ Tarif de base rétabli sur la sélection.');
+  }
+
+  $('sendCode')"""
+              html, count = apply_pattern.subn(apply_replacement, html, count=1)
+              if count != 1:
+                  raise SystemExit('Fonction applyState attendue introuvable')
+
+              html = html.replace(
+                  "$('unitSelect').addEventListener('change',async event=>{unitId=event.target.value;states.clear();resetSelection();setMsg(saveStatus,'');await loadStates();render();});",
+                  "$('unitSelect').addEventListener('change',async event=>{unitId=event.target.value;states.clear();prices.clear();resetSelection();setMsg(saveStatus,'');syncBasePrice();await loadStates();render();});",
+                  1,
+              )
+              html = html.replace(
+                  "$('makeClosed').addEventListener('click',()=>applyState('closed'));",
+                  "$('makeClosed').addEventListener('click',()=>applyState('closed'));\n  $('saveBasePrice').addEventListener('click',saveBasePrice);\n  $('applySpecialPrice').addEventListener('click',applySpecialPrice);\n  $('clearSpecialPrice').addEventListener('click',clearSpecialPrice);",
+                  1,
+              )
+              html = html.replace(
+                  "states.clear();resetSelection();$('unitSelect').innerHTML='';",
+                  "states.clear();prices.clear();resetSelection();$('unitSelect').innerHTML='';",
+                  1,
+              )
+
+          path.write_text(html, encoding='utf-8')
+
+          # ============================================================
+          # 2) VITRINE PUBLIQUE — lecture seulement des tarifs décidés
+          # ============================================================
+          path = Path('index.html')
+          html = path.read_text(encoding='utf-8')
+
+          if 'priceOverrides: {}' not in html:
+              html = html.replace(
+                  '                masterUnitId: "8e197c74-c789-4ca7-8e95-1927cc617960",',
+                  '                masterUnitId: "8e197c74-c789-4ca7-8e95-1927cc617960",\n                priceOverrides: {},',
+                  1,
+              )
+
+              helper_marker = '            // ===== DISPONIBILITÉS VISIBLES — MASTER SUPABASE + REPLI LOCAL ====='
+              helpers = '''            function eurToXof(value) {
+                return Math.round(Number(value || 0) * 655.957);
+            }
+
+            function priceForIso(day) {
+                const special = CFG.priceOverrides && Object.prototype.hasOwnProperty.call(CFG.priceOverrides, day)
+                    ? Number(CFG.priceOverrides[day]) : null;
+                return Number.isFinite(special) ? special : Number(CFG.eur || 0);
+            }
+
+            function stayTotal(startIso, endIso) {
+                let cursor = parseLocalIso(startIso);
+                const endDate = parseLocalIso(endIso);
+                let eur = 0;
+                while (cursor < endDate) {
+                    eur += priceForIso(localIso(cursor));
+                    cursor.setDate(cursor.getDate() + 1);
+                }
+                return { eur, xof: eurToXof(eur) };
+            }
+
+            function refreshBasePriceLabels() {
+                const eur = Number(CFG.eur || 0);
+                const xof = eurToXof(eur);
+                CFG.xof = xof;
+                const heroStrong = document.querySelector('.price-block-hero strong');
+                const heroSpan = document.querySelector('.price-block-hero span');
+                if (heroStrong) heroStrong.textContent = eur.toLocaleString('fr-FR',{maximumFractionDigits:2}) + ' € / nuitée';
+                if (heroSpan) heroSpan.textContent = '≈ ' + xof.toLocaleString('fr-FR') + ' FCFA';
+                const arrival = document.getElementById('arrival');
+                const departure = document.getElementById('departure');
+                const estimate = document.getElementById('estimate');
+                if (estimate && !(arrival && arrival.value) && !(departure && departure.value)) {
+                    estimate.innerHTML = `<strong>${eur.toLocaleString('fr-FR',{maximumFractionDigits:2})} € / nuitée</strong><span>≈ ${xof.toLocaleString('fr-FR')} FCFA · choisissez vos dates.</span>`;
+                }
+                document.querySelectorAll('.summary li').forEach(li => {
+                    if (/€.*FCFA.*nuitée/i.test(li.textContent || '')) {
+                        li.textContent = `✓ ${eur.toLocaleString('fr-FR',{maximumFractionDigits:2})} € ≈ ${xof.toLocaleString('fr-FR')} FCFA / nuitée`;
+                    }
+                });
+            }
+
+'''
+              if helper_marker not in html:
+                  raise SystemExit('Marqueur disponibilités introuvable dans index.html')
+              html = html.replace(helper_marker, helpers + helper_marker, 1)
+
+              html = html.replace(
+                  '        .calendar-grid .day:hover:not(.disabled):not(.blocked) {',
+                  '''        .calendar-grid .day {
+            min-height: 42px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1px;
+            line-height: 1.05;
+        }
+        .calendar-grid .day .day-price {
+            font-size: 9px;
+            font-weight: 1000;
+            opacity: .8;
+            white-space: nowrap;
+        }
+        .calendar-grid .day:hover:not(.disabled):not(.blocked) {''',
+                  1,
+              )
+
+              html = html.replace(
+                  '                        const total = estimatePrice(n);\n                        estimateEl.innerHTML =\n                            `<strong>${n} nuitée(s) : ${(n * CFG.eur).toLocaleString("fr-FR")} €</strong><span>Estimation : ${total.toLocaleString("fr-FR")} FCFA</span>`;',
+                  '                        const total = stayTotal(iso(start), iso(end));\n                        estimateEl.innerHTML =\n                            `<strong>${n} nuitée(s) : ${total.eur.toLocaleString("fr-FR",{maximumFractionDigits:2})} €</strong><span>Estimation : ${total.xof.toLocaleString("fr-FR")} FCFA</span>`;',
+                  1,
+              )
+              html = html.replace(
+                  '                            `<strong>78 € / nuitée</strong><span>≈ 51 165 FCFA · choisissez vos dates.</span>`;',
+                  '                            `<strong>${Number(CFG.eur).toLocaleString("fr-FR",{maximumFractionDigits:2})} € / nuitée</strong><span>≈ ${eurToXof(CFG.eur).toLocaleString("fr-FR")} FCFA · choisissez vos dates.</span>`;',
+                  1,
+              )
+
+              old_cell = '                        html += `<div class="${cls}" data-date="${iso(date)}">${d}</div>`;'
+              new_cell = '''                        const dayIso = iso(date);
+                        const hasSpecial = CFG.priceOverrides && Object.prototype.hasOwnProperty.call(CFG.priceOverrides, dayIso);
+                        const specialPrice = hasSpecial ? Number(CFG.priceOverrides[dayIso]) : null;
+                        const priceTag = Number.isFinite(specialPrice)
+                            ? `<small class="day-price">${specialPrice.toLocaleString("fr-FR",{maximumFractionDigits:2})} €</small>` : "";
+                        html += `<div class="${cls}" data-date="${dayIso}"><span>${d}</span>${priceTag}</div>`;'''
+              if old_cell not in html:
+                  raise SystemExit('Rendu cellule publique attendu introuvable')
+              html = html.replace(old_cell, new_cell, 1)
+
+              sync_pattern = re.compile(r'''                    const todayIso = localIso\(new Date\(\)\);\n                    const \{ data, error \} = await publicDb\n                        \.from\("digiy_loc_master_unit_calendar"\)\n                        \.select\("day,status"\)\n                        \.eq\("unit_id", CFG\.masterUnitId\)\n                        \.gte\("day", todayIso\)\n                        \.lte\("day", CFG\.lastDate\)\n                        \.order\("day"\);\n\n                    if \(error\) throw error;\n\n                    const rows = Array\.isArray\(data\) \? data : \[\];''')
+              sync_replacement = '''                    const todayIso = localIso(new Date());
+                    const [calendarResult, unitResult] = await Promise.all([
+                        publicDb.from("digiy_loc_master_unit_calendar")
+                            .select("day,status,price_override")
+                            .eq("unit_id", CFG.masterUnitId)
+                            .gte("day", todayIso)
+                            .lte("day", CFG.lastDate)
+                            .order("day"),
+                        publicDb.from("digiy_loc_master_units")
+                            .select("base_price,price_currency")
+                            .eq("id", CFG.masterUnitId)
+                            .maybeSingle()
+                    ]);
+
+                    if (calendarResult.error) throw calendarResult.error;
+                    if (!unitResult.error && unitResult.data && unitResult.data.base_price != null) {
+                        CFG.eur = Number(unitResult.data.base_price);
+                        refreshBasePriceLabels();
+                    }
+
+                    const rows = Array.isArray(calendarResult.data) ? calendarResult.data : [];
+                    CFG.priceOverrides = Object.fromEntries(
+                        rows.filter(row => row.price_override != null).map(row => [row.day, Number(row.price_override)])
+                    );'''
+              html, count = sync_pattern.subn(sync_replacement, html, count=1)
+              if count != 1:
+                  raise SystemExit('Lecture Supabase publique attendue introuvable')
+
+              html = html.replace(
+                  '                    return [\n                        "Bonjour Baptiste,",',
+                  '                    const total = stayTotal(a, d);\n\n                    return [\n                        "Bonjour Baptiste,",',
+                  1,
+              )
+              html = html.replace(
+                  '                        "Estimation : " + (n * 78).toLocaleString("fr-FR") + " € / " + (n * 51165).toLocaleString(\n                        "fr-FR") + " FCFA",',
+                  '                        "Estimation : " + total.eur.toLocaleString("fr-FR",{maximumFractionDigits:2}) + " € / " + total.xof.toLocaleString("fr-FR") + " FCFA",',
+                  1,
+              )
+
+          path.write_text(html, encoding='utf-8')
+
+          # Contrôles simples : les commandes restent bien côté propriétaire.
+          gestion = Path('gestion.html').read_text(encoding='utf-8')
+          public = Path('index.html').read_text(encoding='utf-8')
+          required_gestion = ['id="basePrice"','id="saveBasePrice"','id="specialPrice"','id="applySpecialPrice"','price_override']
+          required_public = ['priceOverrides: {}','price_override','stayTotal','refreshBasePriceLabels']
+          missing = [x for x in required_gestion if x not in gestion] + [x for x in required_public if x not in public]
+          if missing:
+              raise SystemExit('Contrôle tarification incomplet: ' + ', '.join(missing))
+          print('Tarification dynamique LOC prête.')
+          PY
+
+      - name: Publier la tarification
+        shell: bash
+        run: |
+          if git diff --quiet -- gestion.html index.html; then
+            echo "Tarification déjà appliquée"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add gestion.html index.html
+          git commit -m "Ajouter tarifs base période et journée LOC"
+          git push
