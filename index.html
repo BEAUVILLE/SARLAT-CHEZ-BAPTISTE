@@ -2076,31 +2076,54 @@
             })();
 
             // ===== SYNCHRONISATION PUBLIQUE DU MASTER LOC =====
+            // DIGIY PUBLIC STATE SYNC V3 — disponibilités prioritaires, tarifs indépendants.
             async function syncMasterCalendar() {
                 if (!window.supabase || !CFG.masterUnitId) return;
 
-                try {
-                    const publicDb = window.supabase.createClient(
-                        "https://wesqmwjjtsefyjnluosj.supabase.co",
-                        "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3",
-                        {
-                            auth: {
-                                persistSession: false,
-                                autoRefreshToken: false,
-                                detectSessionInUrl: false
-                            }
+                const publicDb = window.supabase.createClient(
+                    "https://wesqmwjjtsefyjnluosj.supabase.co",
+                    "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3",
+                    {
+                        auth: {
+                            persistSession: false,
+                            autoRefreshToken: false,
+                            detectSessionInUrl: false
                         }
-                    );
+                    }
+                );
 
-                    const todayIso = localIso(new Date());
-                    const [calendarResult, unitResult, priceResult] = await Promise.all([
-                        publicDb
-                            .from("digiy_loc_master_unit_calendar")
-                            .select("day,status")
-                            .eq("unit_id", CFG.masterUnitId)
-                            .gte("day", todayIso)
-                            .lte("day", CFG.lastDate)
-                            .order("day"),
+                const todayIso = localIso(new Date());
+
+                // 1) PRIORITÉ ABSOLUE : relire les états calendrier et les rendre immédiatement.
+                try {
+                    const calendarResult = await publicDb
+                        .from("digiy_loc_master_unit_calendar")
+                        .select("day,status")
+                        .eq("unit_id", CFG.masterUnitId)
+                        .gte("day", todayIso)
+                        .lte("day", CFG.lastDate)
+                        .order("day");
+
+                    if (calendarResult.error) throw calendarResult.error;
+
+                    const rows = Array.isArray(calendarResult.data) ? calendarResult.data : [];
+                    CFG.blockedDates = rows.filter(row => row.status === "occupied").map(row => row.day);
+                    CFG.closedDates = rows.filter(row => row.status === "closed").map(row => row.day);
+
+                    if (window.DIGIY_RENDER_AVAILABILITY) {
+                        window.DIGIY_RENDER_AVAILABILITY(rows);
+                    }
+                    if (window.DIGIY_REFRESH_PUBLIC_CALENDAR) {
+                        window.DIGIY_REFRESH_PUBLIC_CALENDAR();
+                    }
+                } catch (error) {
+                    console.warn("[SARLAT MASTER] Lecture calendrier indisponible, repli local conservé.", error);
+                    return;
+                }
+
+                // 2) Tarifs en lecture séparée : un problème tarifaire ne bloque jamais les états.
+                try {
+                    const [unitResult, priceResult] = await Promise.all([
                         publicDb
                             .from("digiy_loc_master_units")
                             .select("base_price,price_currency")
@@ -2115,32 +2138,23 @@
                             .order("day")
                     ]);
 
-                    if (calendarResult.error) throw calendarResult.error;
-                    if (unitResult.error) throw unitResult.error;
-                    if (priceResult.error) throw priceResult.error;
+                    if (!unitResult.error) {
+                        const liveBase = Number(unitResult.data && unitResult.data.base_price);
+                        if (Number.isFinite(liveBase) && liveBase >= 0) CFG.eur = liveBase;
+                    }
 
-                    const rows = Array.isArray(calendarResult.data) ? calendarResult.data : [];
-                    const priceRows = Array.isArray(priceResult.data) ? priceResult.data : [];
-                    const liveBase = Number(unitResult.data && unitResult.data.base_price);
-                    if (Number.isFinite(liveBase) && liveBase >= 0) CFG.eur = liveBase;
-                    CFG.priceOverrides = Object.fromEntries(
-                        priceRows
-                            .filter(row => row && row.day && Number.isFinite(Number(row.price_override)))
-                            .map(row => [row.day, Number(row.price_override)])
-                    );
+                    if (!priceResult.error) {
+                        const priceRows = Array.isArray(priceResult.data) ? priceResult.data : [];
+                        CFG.priceOverrides = Object.fromEntries(
+                            priceRows
+                                .filter(row => row && row.day && Number.isFinite(Number(row.price_override)))
+                                .map(row => [row.day, Number(row.price_override)])
+                        );
+                    }
 
-                    CFG.blockedDates = rows.filter(row => row.status === "occupied").map(row => row.day);
-                    CFG.closedDates = rows.filter(row => row.status === "closed").map(row => row.day);
                     refreshPublicBasePrice();
-
-                    if (window.DIGIY_RENDER_AVAILABILITY) {
-                        window.DIGIY_RENDER_AVAILABILITY(rows);
-                    }
-                    if (window.DIGIY_REFRESH_PUBLIC_CALENDAR) {
-                        window.DIGIY_REFRESH_PUBLIC_CALENDAR();
-                    }
                 } catch (error) {
-                    console.warn("[SARLAT MASTER] Lecture Supabase indisponible, repli local conservé.", error);
+                    console.warn("[SARLAT MASTER] Lecture tarifs indisponible, états calendrier conservés.", error);
                     refreshPublicBasePrice();
                 }
             }
