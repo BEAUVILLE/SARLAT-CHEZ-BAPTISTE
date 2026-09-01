@@ -64,28 +64,65 @@ function updateSelection(){if(!start)return $('selectionLabel').textContent='Sé
 function resetSelection(){start=null;end=null;updateSelection()}
 function choose(date){if(date<today())return;if(!start||end){start=date;end=null}else if(date<start){end=start;start=date}else end=date;updateSelection();render()}
 function render(){const y=current.getFullYear(),m=current.getMonth();$('monthLabel').textContent=current.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});const grid=$('calendarGrid');grid.innerHTML='';['Lu','Ma','Me','Je','Ve','Sa','Di'].forEach(x=>{const e=document.createElement('div');e.className='dow';e.textContent=x;grid.appendChild(e)});const first=new Date(y,m,1,12),offset=(first.getDay()+6)%7,last=new Date(y,m+1,0,12).getDate();for(let i=0;i<offset;i++)grid.appendChild(document.createElement('div'));const sel=new Set(selectedDates());for(let d=1;d<=last;d++){const date=new Date(y,m,d,12),key=iso(date),b=document.createElement('button');b.type='button';b.className='day';b.dataset.date=key;const shown=prices.has(key)?prices.get(key):basePrice;b.innerHTML='<span>'+d+'</span><small class="day-price">'+money(shown)+'</small>';if(date<today())b.disabled=true;const state=states.get(key);if(state)b.classList.add(state);if(sel.has(key))b.classList.add('selected');if(key===iso(today()))b.classList.add('today');b.addEventListener('click',()=>choose(date));grid.appendChild(b)}}
+// DIGIY OWNER STATE VERIFY V1 — la base reste la seule mémoire de vérité.
 async function applyState(status){
   const dates=selectedDates();
   if(!dates.length)return msg(saveStatus,'⚠️ Sélectionnez une date ou une période.',true);
   if(!unitId)return msg(saveStatus,'⚠️ Aucun hébergement sélectionné.',true);
-  msg(saveStatus,'Enregistrement de l’état…');
-  const {data,error}=await db.rpc('digiy_loc_set_unit_calendar_state_v2',{
-    p_unit_id:unitId,
-    p_days:dates,
-    p_status:status
-  });
-  if(error)return msg(saveStatus,'⚠️ État refusé : '+error.message,true);
-  const rows=Array.isArray(data)?data:[];
-  if(rows.length!==dates.length)return msg(saveStatus,'⚠️ Réponse incomplète de la base.',true);
-  rows.forEach(row=>{
-    if(row.status==='available')states.delete(row.day);
-    else states.set(row.day,row.status);
-  });
-  const label=status==='available'?'Disponible':status==='occupied'?'Occupé':'Fermé';
-  msg(saveStatus,'✓ '+label+' enregistré sur '+dates.length+(dates.length===1?' date.':' dates.'));
-  resetSelection();
-  render();
+
+  const buttons=[$('makeAvailable'),$('makeOccupied'),$('makeClosed')].filter(Boolean);
+  buttons.forEach(button=>button.disabled=true);
+  msg(saveStatus,'Enregistrement et vérification…');
+
+  try{
+    const {data,error}=await db.rpc('digiy_loc_set_unit_calendar_state_v2',{
+      p_unit_id:unitId,
+      p_days:dates,
+      p_status:status
+    });
+    if(error)return msg(saveStatus,'⚠️ État refusé : '+error.message,true);
+
+    const rows=Array.isArray(data)?data:[];
+    const returnedDays=new Set(rows.map(row=>String(row.day)));
+    if(rows.length!==dates.length || dates.some(day=>!returnedDays.has(day))){
+      return msg(saveStatus,'⚠️ La base n’a pas confirmé toute la sélection.',true);
+    }
+
+    // Ne jamais valider sur la seule réponse du clic : on relit la base.
+    await loadData();
+    const persisted=status==='available'
+      ? dates.every(day=>!states.has(day))
+      : dates.every(day=>states.get(day)===status);
+
+    if(!persisted){
+      render();
+      return msg(saveStatus,'⚠️ État non retrouvé après relecture. Aucun faux succès affiché.',true);
+    }
+
+    const label=status==='available'?'Disponible':status==='occupied'?'Occupé':'Fermé';
+    resetSelection();
+    render();
+    msg(saveStatus,'✓ '+label+' confirmé en base sur '+dates.length+(dates.length===1?' date.':' dates.'));
+  }finally{
+    buttons.forEach(button=>button.disabled=false);
+  }
 }
+
+let ownerResyncBusy=false;
+async function resyncOwnerCalendar(){
+  if(ownerResyncBusy||!unitId||managerPanel.classList.contains('hidden'))return;
+  ownerResyncBusy=true;
+  try{
+    await loadData();
+    render();
+  }finally{
+    ownerResyncBusy=false;
+  }
+}
+window.addEventListener('focus',resyncOwnerCalendar);
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible')resyncOwnerCalendar();
+});
 async function saveBasePrice(){const value=Number(String($('basePrice').value).replace(',','.'));if(!Number.isFinite(value)||value<0)return msg(saveStatus,'⚠️ Tarif de base invalide.',true);const{data,error}=await db.from('digiy_loc_master_units').update({base_price:value,price_currency:currency||'EUR',updated_at:new Date().toISOString()}).eq('id',unitId).select('id,base_price,price_currency').maybeSingle();if(error||!data)return msg(saveStatus,'⚠️ Tarif de base non enregistré'+(error?' : '+error.message:''),true);const u=currentUnit();u.base_price=Number(data.base_price);u.price_currency=data.price_currency||'EUR';syncBase();render();msg(saveStatus,'✓ Tarif de base enregistré : '+money(basePrice)+'.')}
 async function applySpecialPrice(){const dates=selectedDates();if(!dates.length)return msg(saveStatus,'⚠️ Sélectionnez une date ou une période.',true);const value=Number(String($('specialPrice').value).replace(',','.'));if(!Number.isFinite(value)||value<0)return msg(saveStatus,'⚠️ Prix spécial invalide.',true);const rows=dates.map(day=>({unit_id:unitId,day,price_override:value,updated_at:new Date().toISOString()}));const{data,error}=await db.from('digiy_loc_master_unit_prices').upsert(rows,{onConflict:'unit_id,day'}).select('day,price_override');if(error||!data||data.length!==dates.length)return msg(saveStatus,'⚠️ Prix non enregistré'+(error?' : '+error.message:''),true);data.forEach(r=>prices.set(r.day,Number(r.price_override)));render();msg(saveStatus,'✓ Prix enregistré : '+money(value)+'.')}
 async function clearSpecialPrice(){const dates=selectedDates();if(!dates.length)return msg(saveStatus,'⚠️ Sélectionnez une date ou une période.',true);const{error}=await db.from('digiy_loc_master_unit_prices').delete().eq('unit_id',unitId).in('day',dates);if(error)return msg(saveStatus,'⚠️ Retour tarif de base refusé : '+error.message,true);dates.forEach(d=>prices.delete(d));render();msg(saveStatus,'✓ Tarif de base rétabli sur la sélection.')}
