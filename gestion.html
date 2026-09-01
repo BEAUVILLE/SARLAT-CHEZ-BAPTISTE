@@ -88,16 +88,29 @@ async function applyState(status){
       return msg(saveStatus,'⚠️ La base n’a pas confirmé toute la sélection.',true);
     }
 
-    // Ne jamais valider sur la seule réponse du clic : on relit la base.
-    await loadData();
+    // DIGIY OWNER STATE VERIFY V2 — confirmer le statut sans dépendre du chargement des tarifs.
+    const {data:verifyRows,error:verifyError}=await db.from('digiy_loc_master_unit_calendar')
+      .select('day,status')
+      .eq('unit_id',unitId)
+      .in('day',dates);
+    if(verifyError){
+      render();
+      return msg(saveStatus,'⚠️ Relecture du statut impossible : '+verifyError.message,true);
+    }
+
+    const verifyMap=new Map((verifyRows||[]).map(row=>[String(row.day),row.status]));
     const persisted=status==='available'
-      ? dates.every(day=>!states.has(day))
-      : dates.every(day=>states.get(day)===status);
+      ? dates.every(day=>!verifyMap.has(day))
+      : dates.every(day=>verifyMap.get(day)===status);
 
     if(!persisted){
       render();
       return msg(saveStatus,'⚠️ État non retrouvé après relecture. Aucun faux succès affiché.',true);
     }
+
+    // Le statut est confirmé : mettre à jour l’affichage immédiatement.
+    if(status==='available') dates.forEach(day=>states.delete(day));
+    else dates.forEach(day=>states.set(day,status));
 
     const label=status==='available'?'Disponible':status==='occupied'?'Occupé':'Fermé';
     resetSelection();
