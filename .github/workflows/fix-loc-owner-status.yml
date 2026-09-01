@@ -60,3 +60,4 @@ jobs:
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "Fiabiliser Libre Occupe Ferme du calendrier LOC"
           git push
+# relance 2026-09-01
