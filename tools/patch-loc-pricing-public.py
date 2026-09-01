@@ -1,67 +1,111 @@
 from pathlib import Path
+import re
 
 path = Path('index.html')
 s = path.read_text(encoding='utf-8')
 
-marker = 'DIGIY PUBLIC LIVE SYNC V2'
+marker = 'DIGIY PUBLIC STATE SYNC V3'
 if marker in s:
-    print('Synchronisation publique live V2 déjà appliquée.')
+    print('Synchronisation publique des états déjà découplée des tarifs.')
     raise SystemExit(0)
 
-start_anchor = '            (async function syncMasterCalendar() {'
-if start_anchor not in s:
-    raise SystemExit('Début syncMasterCalendar introuvable')
-s = s.replace(start_anchor, '            async function syncMasterCalendar() {', 1)
+pattern = re.compile(
+    r"            // ===== SYNCHRONISATION PUBLIQUE DU MASTER LOC =====\n"
+    r"            async function syncMasterCalendar\(\) \{.*?\n"
+    r"            \}\n\n"
+    r"            // DIGIY PUBLIC LIVE SYNC V2",
+    re.S,
+)
 
-sync_start = s.find('            // ===== SYNCHRONISATION PUBLIQUE DU MASTER LOC =====')
-if sync_start < 0:
-    raise SystemExit('Bloc synchronisation publique introuvable')
+replacement = '''            // ===== SYNCHRONISATION PUBLIQUE DU MASTER LOC =====
+            // DIGIY PUBLIC STATE SYNC V3 — disponibilités prioritaires, tarifs indépendants.
+            async function syncMasterCalendar() {
+                if (!window.supabase || !CFG.masterUnitId) return;
 
-end_anchor = '            })();\n\n            // ===== FORMULAIRE ====='
-end_pos = s.find(end_anchor, sync_start)
-if end_pos < 0:
-    raise SystemExit('Fin syncMasterCalendar introuvable')
+                const publicDb = window.supabase.createClient(
+                    "https://wesqmwjjtsefyjnluosj.supabase.co",
+                    "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3",
+                    {
+                        auth: {
+                            persistSession: false,
+                            autoRefreshToken: false,
+                            detectSessionInUrl: false
+                        }
+                    }
+                );
 
-live = '''            }
+                const todayIso = localIso(new Date());
 
-            // DIGIY PUBLIC LIVE SYNC V2 — Supabase est la mémoire commune Proprio/Public.
-            let publicLocSyncBusy=false;
-            async function refreshPublicLoc(){
-                if(publicLocSyncBusy)return;
-                publicLocSyncBusy=true;
-                try{await syncMasterCalendar();}
-                finally{publicLocSyncBusy=false;}
+                // 1) PRIORITÉ ABSOLUE : relire les états calendrier et les rendre immédiatement.
+                try {
+                    const calendarResult = await publicDb
+                        .from("digiy_loc_master_unit_calendar")
+                        .select("day,status")
+                        .eq("unit_id", CFG.masterUnitId)
+                        .gte("day", todayIso)
+                        .lte("day", CFG.lastDate)
+                        .order("day");
+
+                    if (calendarResult.error) throw calendarResult.error;
+
+                    const rows = Array.isArray(calendarResult.data) ? calendarResult.data : [];
+                    CFG.blockedDates = rows.filter(row => row.status === "occupied").map(row => row.day);
+                    CFG.closedDates = rows.filter(row => row.status === "closed").map(row => row.day);
+
+                    if (window.DIGIY_RENDER_AVAILABILITY) {
+                        window.DIGIY_RENDER_AVAILABILITY(rows);
+                    }
+                    if (window.DIGIY_REFRESH_PUBLIC_CALENDAR) {
+                        window.DIGIY_REFRESH_PUBLIC_CALENDAR();
+                    }
+                } catch (error) {
+                    console.warn("[SARLAT MASTER] Lecture calendrier indisponible, repli local conservé.", error);
+                    return;
+                }
+
+                // 2) Tarifs en lecture séparée : un problème tarifaire ne bloque jamais les états.
+                try {
+                    const [unitResult, priceResult] = await Promise.all([
+                        publicDb
+                            .from("digiy_loc_master_units")
+                            .select("base_price,price_currency")
+                            .eq("id", CFG.masterUnitId)
+                            .single(),
+                        publicDb
+                            .from("digiy_loc_master_unit_prices")
+                            .select("day,price_override")
+                            .eq("unit_id", CFG.masterUnitId)
+                            .gte("day", todayIso)
+                            .lte("day", CFG.lastDate)
+                            .order("day")
+                    ]);
+
+                    if (!unitResult.error) {
+                        const liveBase = Number(unitResult.data && unitResult.data.base_price);
+                        if (Number.isFinite(liveBase) && liveBase >= 0) CFG.eur = liveBase;
+                    }
+
+                    if (!priceResult.error) {
+                        const priceRows = Array.isArray(priceResult.data) ? priceResult.data : [];
+                        CFG.priceOverrides = Object.fromEntries(
+                            priceRows
+                                .filter(row => row && row.day && Number.isFinite(Number(row.price_override)))
+                                .map(row => [row.day, Number(row.price_override)])
+                        );
+                    }
+
+                    refreshPublicBasePrice();
+                } catch (error) {
+                    console.warn("[SARLAT MASTER] Lecture tarifs indisponible, états calendrier conservés.", error);
+                    refreshPublicBasePrice();
+                }
             }
 
-            window.DIGIY_SYNC_PUBLIC_LOC=refreshPublicLoc;
-            refreshPublicLoc();
+            // DIGIY PUBLIC LIVE SYNC V2'''
 
-            // Même appareil : notification immédiate depuis gestion.html.
-            try{
-                const publicSyncChannel=new BroadcastChannel('digiy-loc-sarlat');
-                publicSyncChannel.addEventListener('message',event=>{
-                    if(event.data&&event.data.type==='calendar-changed')refreshPublicLoc();
-                });
-                window.DIGIY_PUBLIC_SYNC_CHANNEL=publicSyncChannel;
-            }catch(_){ }
+s2, count = pattern.subn(replacement, s, count=1)
+if count != 1:
+    raise SystemExit('Bloc syncMasterCalendar attendu introuvable : arrêt sans modification.')
 
-            window.addEventListener('storage',event=>{
-                if(event.key==='digiy-loc-sarlat-sync')refreshPublicLoc();
-            });
-
-            // Retour sur l’onglet : relecture immédiate de Supabase.
-            window.addEventListener('focus',refreshPublicLoc);
-            document.addEventListener('visibilitychange',()=>{
-                if(document.visibilityState==='visible')refreshPublicLoc();
-            });
-
-            // Autre appareil / autre navigateur : resynchronisation régulière.
-            setInterval(()=>{
-                if(document.visibilityState==='visible')refreshPublicLoc();
-            },15000);
-
-            // ===== FORMULAIRE ====='''
-
-s = s[:end_pos] + live + s[end_pos + len(end_anchor):]
-path.write_text(s, encoding='utf-8')
-print('Synchronisation Proprio → Supabase → Public activée en continu.')
+path.write_text(s2, encoding='utf-8')
+print('Synchronisation publique : états calendrier indépendants des tarifs.')
