@@ -2076,7 +2076,7 @@
             })();
 
             // ===== SYNCHRONISATION PUBLIQUE DU MASTER LOC =====
-            (async function syncMasterCalendar() {
+            async function syncMasterCalendar() {
                 if (!window.supabase || !CFG.masterUnitId) return;
 
                 try {
@@ -2143,7 +2143,43 @@
                     console.warn("[SARLAT MASTER] Lecture Supabase indisponible, repli local conservé.", error);
                     refreshPublicBasePrice();
                 }
-            })();
+            }
+
+            // DIGIY PUBLIC LIVE SYNC V2 — Supabase est la mémoire commune Proprio/Public.
+            let publicLocSyncBusy=false;
+            async function refreshPublicLoc(){
+                if(publicLocSyncBusy)return;
+                publicLocSyncBusy=true;
+                try{await syncMasterCalendar();}
+                finally{publicLocSyncBusy=false;}
+            }
+
+            window.DIGIY_SYNC_PUBLIC_LOC=refreshPublicLoc;
+            refreshPublicLoc();
+
+            // Même appareil : notification immédiate depuis gestion.html.
+            try{
+                const publicSyncChannel=new BroadcastChannel('digiy-loc-sarlat');
+                publicSyncChannel.addEventListener('message',event=>{
+                    if(event.data&&event.data.type==='calendar-changed')refreshPublicLoc();
+                });
+                window.DIGIY_PUBLIC_SYNC_CHANNEL=publicSyncChannel;
+            }catch(_){ }
+
+            window.addEventListener('storage',event=>{
+                if(event.key==='digiy-loc-sarlat-sync')refreshPublicLoc();
+            });
+
+            // Retour sur l’onglet : relecture immédiate de Supabase.
+            window.addEventListener('focus',refreshPublicLoc);
+            document.addEventListener('visibilitychange',()=>{
+                if(document.visibilityState==='visible')refreshPublicLoc();
+            });
+
+            // Autre appareil / autre navigateur : resynchronisation régulière.
+            setInterval(()=>{
+                if(document.visibilityState==='visible')refreshPublicLoc();
+            },15000);
 
             // ===== FORMULAIRE =====
             (function initForm() {
