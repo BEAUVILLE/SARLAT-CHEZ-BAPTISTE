@@ -1,0 +1,36 @@
+name: Restaurer accès propriétaire statique LOC Sarlat
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/restore-owner-access-static.yml']
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Poser accès propriétaire statique
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          if 'href="https://sarlat-chez-baptiste.digiylyfe.com/gestion.html"' in s:
+              raise SystemExit('accès propriétaire déjà présent')
+          marker='<a class="back" href="https://digiylyfe.com/sarlat.html">← Découvrir Sarlat</a>'
+          if marker not in s:
+              raise SystemExit('marqueur Sarlat introuvable')
+          link='<a class="owner-access" href="https://sarlat-chez-baptiste.digiylyfe.com/gestion.html" rel="nofollow" aria-label="Accès propriétaire SARLAT CHEZ BAPTISTE">🔐 Accès propriétaire</a>'
+          p.write_text(s.replace(marker,marker+'\n                '+link,1))
+          PY
+      - name: Vérifier
+        run: |
+          grep -q 'https://sarlat-chez-baptiste.digiylyfe.com/gestion.html' index.html
+      - name: Commit
+        run: |
+          git config user.name 'DIGIY LYFE'
+          git config user.email 'baptistejb24@gmail.com'
+          git add index.html
+          git commit -m 'Restaurer accès propriétaire discret LOC Sarlat'
+          git push
