@@ -1,0 +1,39 @@
+name: Séparer porte privée LOC Sarlat
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/private-owner-door.yml']
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Retirer porte publique et fixer retour gestion
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          old='<a class="owner-access" href="https://sarlat-chez-baptiste.digiylyfe.com/gestion.html" aria-label="Accès propriétaire SARLAT CHEZ BAPTISTE">🔐 Accès propriétaire</a>'
+          if old not in s: raise SystemExit('porte propriétaire Sarlat introuvable')
+          p.write_text(s.replace(old,''))
+          g=Path('gestion.html')
+          t=g.read_text()
+          old2='<a class="back" href="./">← Voir la fiche publique</a>'
+          new2='<a class="back" href="https://sarlat-chez-baptiste.digiylyfe.com/">← Voir la fiche publique</a>'
+          if old2 not in t: raise SystemExit('retour gestion Sarlat introuvable')
+          g.write_text(t.replace(old2,new2))
+          PY
+      - name: Vérifier
+        run: |
+          ! grep -q 'Accès propriétaire SARLAT CHEZ BAPTISTE' index.html
+          grep -q 'https://sarlat-chez-baptiste.digiylyfe.com/' gestion.html
+      - name: Commit
+        run: |
+          git config user.name 'DIGIY LYFE'
+          git config user.email 'baptistejb24@gmail.com'
+          git add index.html gestion.html
+          git commit -m 'Privatiser accès propriétaire LOC Sarlat'
+          git push
