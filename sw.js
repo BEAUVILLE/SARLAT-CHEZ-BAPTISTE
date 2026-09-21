@@ -1,8 +1,9 @@
-const CACHE = "sarlat-chez-baptiste-v3-20260921";
+const CACHE = "sarlat-chez-baptiste-v4-20260921";
 const CORE = [
   "./",
   "./index.html",
   "./gestion.html",
+  "./gestion/",
   "./manifest.webmanifest",
   "./pwa-icon-192.png",
   "./pwa-icon-512.png",
