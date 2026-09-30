@@ -2085,6 +2085,18 @@
                     return !!dayState(date);
                 }
 
+                function stayHasBlockedNight(arrivalIso, departureIso) {
+                    if (!arrivalIso || !departureIso) return false;
+                    let cursor = new Date(arrivalIso + "T12:00:00");
+                    const departureDate = new Date(departureIso + "T12:00:00");
+                    if (!Number.isFinite(cursor.getTime()) || !Number.isFinite(departureDate.getTime()) || cursor >= departureDate) return false;
+                    while (cursor < departureDate) {
+                        if (isBlocked(cursor)) return true;
+                        cursor.setDate(cursor.getDate() + 1);
+                    }
+                    return false;
+                }
+
                 function isPast(date) {
                     const d = new Date(date);
                     d.setHours(0, 0, 0, 0);
@@ -2381,6 +2393,7 @@
 
                     const n = Math.round((new Date(d + "T12:00") - new Date(a + "T12:00")) / 86400000);
                     if (n <= 0) throw new Error("La date de départ doit être après l'arrivée.");
+                    if (stayHasBlockedNight(a, d)) throw new Error("Indisponible pour ces dates — choisissez une autre période.");
                     const totalEur = stayTotalEUR(a, d);
                     const totalXof = xofFromEur(totalEur);
 
