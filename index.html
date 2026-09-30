@@ -25,7 +25,11 @@
       "address":{"@type":"PostalAddress","addressLocality":"Sarlat-la-Canéda","addressCountry":"FR"},
       "areaServed":[{"@type":"Place","name":"Sarlat-la-Canéda"}],
       "numberOfRooms":1,
-      "occupancy":{"@type":"QuantitativeValue","maxValue":2},
+      "containsPlace":{
+        "@type":"Room",
+        "name":"Chambre privée",
+        "occupancy":{"@type":"QuantitativeValue","maxValue":2}
+      },
       "priceRange":"78 € la nuitée"
     }
     </script>
