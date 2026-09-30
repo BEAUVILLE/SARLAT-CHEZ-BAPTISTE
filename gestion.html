@@ -105,6 +105,10 @@ function voiceDayTarget(text){
   const t=voiceNorm(text);
   if(!/\b(reservation|resa|booking)\b/.test(t))return null;
   const base=today();
+  if(/\b(apres demain|apres-demain|day after tomorrow)\b/.test(t)){
+    const d=new Date(base);d.setDate(d.getDate()+2);
+    return {day:iso(d),label:'après-demain'};
+  }
   if(/\b(demain|tomorrow)\b/.test(t)){const d=new Date(base);d.setDate(d.getDate()+1);return {day:iso(d),label:'demain'};}
   if(/\b(aujourd hui|aujourdhui|today|ce jour)\b/.test(t))return {day:iso(base),label:'aujourd’hui'};
   return null;
