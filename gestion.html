@@ -119,8 +119,13 @@ function askVoiceCalendar(){
   const target=voiceDayTarget(voiceQuery&&voiceQuery.value);
   if(!target){setVoiceAnswer('Pour cette V1, demandez : « J’ai une réservation aujourd’hui ? » ou « J’ai une réservation demain ? »');return;}
   const hits=(reservations||[]).filter(r=>String(r.start_day)<=target.day&&String(r.end_day)>=target.day);
-  if(!hits.length){setVoiceAnswer('Non. Aucune réservation enregistrée ne concerne '+target.label+'.');return;}
-  setVoiceAnswer('Oui. '+hits.length+' réservation'+(hits.length>1?'s':'')+' concerne'+(hits.length>1?'nt':'')+' '+target.label+'.');
+  const occupied=states.get(target.day)==='occupied';
+  if(!occupied && !hits.length){setVoiceAnswer('Non. Aucune réservation ne concerne '+target.label+'.');return;}
+  if(hits.length){
+    setVoiceAnswer('Oui. '+hits.length+' réservation'+(hits.length>1?'s':'')+' concerne'+(hits.length>1?'nt':'')+' '+target.label+'.');
+    return;
+  }
+  setVoiceAnswer('Oui. Le calendrier indique que le logement est occupé '+target.label+'.');
 }
 voiceAskBtn&&voiceAskBtn.addEventListener('click',askVoiceCalendar);
 voiceQuery&&voiceQuery.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();askVoiceCalendar();}});
