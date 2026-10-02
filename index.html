@@ -1389,7 +1389,7 @@
             <div class="top-actions">
                 <a href="https://digiylyfe.com/" style="flex:0 0 auto;width:auto;min-height:42px;display:inline-flex;align-items:center;justify-content:flex-start;gap:6px;padding:8px 12px;border:2px solid #c99743;border-radius:999px;background:#315b43;color:#fff;text-decoration:none;font-size:12px;font-weight:1000;letter-spacing:.01em;box-shadow:0 6px 16px rgba(49,91,67,.18);justify-self:start">← RETOUR DIGIYLYFE.COM</a>
                 <a class="back" href="https://digiylyfe.com/sarlat.html">← Découvrir Sarlat</a>
-                <a class="owner-access" href="https://pro-espace.digiylyfe.com/?site=sarlat-chez-baptiste" rel="nofollow" aria-label="Accès propriétaire SARLAT CHEZ BAPTISTE">🔐 Accès propriétaire</a>
+                <a class="owner-access" href="https://pro-espace.digiylyfe.com/?site=sarlat-chez-baptiste&v=20261002-1412" rel="nofollow" aria-label="Accès propriétaire SARLAT CHEZ BAPTISTE">🔐 Accès propriétaire</a>
                 
             </div>
         </header>
@@ -2364,6 +2364,38 @@
 
             window.DIGIY_SYNC_PUBLIC_LOC=refreshPublicLoc;
             refreshPublicLoc();
+
+            // DIGIY PUBLIC REALTIME V1 — changement MASTER => relecture immédiate, même entre sous-domaines.
+            try{
+                if(window.supabase && typeof window.supabase.createClient==='function'){
+                    const realtimeDb=window.supabase.createClient(
+                        "https://wesqmwjjtsefyjnluosj.supabase.co",
+                        "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3",
+                        {auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}}
+                    );
+                    const realtimeChannel=realtimeDb
+                        .channel('sarlat-public-calendar-master')
+                        .on('postgres_changes',{
+                            event:'*',
+                            schema:'public',
+                            table:'digiy_loc_master_unit_calendar'
+                        },payload=>{
+                            const row=(payload&&payload.new&&Object.keys(payload.new).length)?payload.new:(payload&&payload.old?payload.old:null);
+                            if(!row || !row.unit_id || String(row.unit_id)===String(CFG.masterUnitId)){
+                                refreshPublicLoc();
+                            }
+                        })
+                        .subscribe((status,error)=>{
+                            if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'){
+                                console.warn('[SARLAT MASTER] Realtime indisponible, polling REST conservé.',error||status);
+                            }
+                        });
+                    window.DIGIY_PUBLIC_REALTIME_DB=realtimeDb;
+                    window.DIGIY_PUBLIC_REALTIME_CHANNEL=realtimeChannel;
+                }
+            }catch(realtimeError){
+                console.warn('[SARLAT MASTER] Realtime non initialisé, polling REST conservé.',realtimeError);
+            }
 
             // DIGIY PUBLIC RESERVATION SYNC V6 — appliquer d'abord le signal proprio, puis confirmer par Supabase.
             function applyPublicSyncPayload(payload){
