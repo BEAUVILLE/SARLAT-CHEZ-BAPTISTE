@@ -2353,7 +2353,7 @@
                 }
             }
 
-            // DIGIY PUBLIC LIVE SYNC V2 — Supabase est la mémoire commune Proprio/Public.
+            // DIGIY PUBLIC MASTER CHAIN — lecture directe Supabase, sans mémoire parallèle.
             let publicLocSyncBusy=false;
             async function refreshPublicLoc(){
                 if(publicLocSyncBusy)return;
@@ -2365,104 +2365,12 @@
             window.DIGIY_SYNC_PUBLIC_LOC=refreshPublicLoc;
             refreshPublicLoc();
 
-            // DIGIY PUBLIC REALTIME V1 — changement MASTER => relecture immédiate, même entre sous-domaines.
-            try{
-                if(window.supabase && typeof window.supabase.createClient==='function'){
-                    const realtimeDb=window.supabase.createClient(
-                        "https://wesqmwjjtsefyjnluosj.supabase.co",
-                        "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3",
-                        {auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}}
-                    );
-                    const realtimeChannel=realtimeDb
-                        .channel('sarlat-public-calendar-master')
-                        .on('postgres_changes',{
-                            event:'*',
-                            schema:'public',
-                            table:'digiy_loc_master_unit_calendar'
-                        },payload=>{
-                            const row=(payload&&payload.new&&Object.keys(payload.new).length)?payload.new:(payload&&payload.old?payload.old:null);
-                            if(!row || !row.unit_id || String(row.unit_id)===String(CFG.masterUnitId)){
-                                refreshPublicLoc();
-                            }
-                        })
-                        .subscribe((status,error)=>{
-                            if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'){
-                                console.warn('[SARLAT MASTER] Realtime indisponible, polling REST conservé.',error||status);
-                            }
-                        });
-                    window.DIGIY_PUBLIC_REALTIME_DB=realtimeDb;
-                    window.DIGIY_PUBLIC_REALTIME_CHANNEL=realtimeChannel;
-                }
-            }catch(realtimeError){
-                console.warn('[SARLAT MASTER] Realtime non initialisé, polling REST conservé.',realtimeError);
-            }
-
-            // DIGIY PUBLIC RESERVATION SYNC V6 — appliquer d'abord le signal proprio, puis confirmer par Supabase.
-            function applyPublicSyncPayload(payload){
-                if(!payload || payload.type!=='calendar-changed') return false;
-                if(payload.unitId && payload.unitId!==CFG.masterUnitId) return false;
-                const dates=Array.isArray(payload.dates)?payload.dates.filter(Boolean):[];
-                if(!dates.length) return false;
-                const blocked=new Set(CFG.blockedDates||[]);
-                const closed=new Set(CFG.closedDates||[]);
-                dates.forEach(day=>{
-                    if(payload.status==='occupied'){
-                        blocked.add(day);closed.delete(day);
-                    }else if(payload.status==='closed'){
-                        closed.add(day);blocked.delete(day);
-                    }else if(payload.status==='available'){
-                        blocked.delete(day);closed.delete(day);
-                    }
-                });
-                CFG.blockedDates=Array.from(blocked).sort();
-                CFG.closedDates=Array.from(closed).sort();
-                if(window.DIGIY_REFRESH_PUBLIC_CALENDAR) window.DIGIY_REFRESH_PUBLIC_CALENDAR();
-                return true;
-            }
-
-            // Même appareil : notification immédiate depuis gestion.html.
-            try{
-                const publicSyncChannel=new BroadcastChannel('digiy-loc-sarlat');
-                publicSyncChannel.addEventListener('message',event=>{
-                    if(applyPublicSyncPayload(event.data)) refreshPublicLoc();
-                });
-                window.DIGIY_PUBLIC_SYNC_CHANNEL=publicSyncChannel;
-            }catch(_){ }
-
-            window.addEventListener('storage',event=>{
-                if(event.key!=='digiy-loc-sarlat-sync') return;
-                let payload=null;
-                try{payload=event.newValue?JSON.parse(event.newValue):null;}catch(_){ }
-                applyPublicSyncPayload(payload);
-                refreshPublicLoc();
-            });
-
-            // Retour / restauration navigateur : toujours relire la vérité Supabase.
+            // La fiche publique relit directement MASTER aux moments utiles.
             window.addEventListener('focus',refreshPublicLoc);
             window.addEventListener('pageshow',refreshPublicLoc);
-            window.addEventListener('online',refreshPublicLoc);
             document.addEventListener('visibilitychange',()=>{
                 if(document.visibilityState==='visible')refreshPublicLoc();
             });
-
-            // Dès que le calendrier revient réellement à l'écran, forcer une relecture MASTER.
-            const publicCalendarContainer=document.getElementById('calendarContainer');
-            if(publicCalendarContainer){
-                publicCalendarContainer.addEventListener('pointerdown',refreshPublicLoc,{passive:true});
-                publicCalendarContainer.addEventListener('touchstart',refreshPublicLoc,{passive:true});
-                if('IntersectionObserver' in window){
-                    const calendarObserver=new IntersectionObserver(entries=>{
-                        if(entries.some(entry=>entry.isIntersecting))refreshPublicLoc();
-                    },{threshold:0.15});
-                    calendarObserver.observe(publicCalendarContainer);
-                    window.DIGIY_PUBLIC_CALENDAR_OBSERVER=calendarObserver;
-                }
-            }
-
-            // Autre appareil / autre navigateur : resynchronisation régulière tant que la page est visible.
-            setInterval(()=>{
-                if(document.visibilityState==='visible')refreshPublicLoc();
-            },5000);
 
             // ===== FORMULAIRE =====
             (function initForm() {
@@ -2793,14 +2701,14 @@ function renderReservations(){
     card.appendChild(actions);box.appendChild(card);
   });
 }
-// DIGIY SARLAT PRIVATE RESERVATION VERIFY V2 — même chaîne de vérité que le bouton Occupé.
+// DIGIY SARLAT OWNER MASTER CHAIN — même logique fondamentale que Saly : RPC → relecture MASTER → states → render.
 async function savePrivateReservation(){
   const dates=selectedDates();
   if(!dates.length)return msg(saveStatus,'⚠️ Sélectionnez d’abord une date ou une période.',true);
   const guestName=$('guestName').value.trim(),guestPhone=$('guestPhone').value.trim();
   if(!guestName)return msg(saveStatus,'⚠️ Indiquez le nom du client.',true);
   if(!guestPhone)return msg(saveStatus,'⚠️ Indiquez le téléphone du client.',true);
-  const button=$('saveReservation');button.disabled=true;msg(saveStatus,'Enregistrement et vérification…');
+  const button=$('saveReservation');button.disabled=true;msg(saveStatus,'Enregistrement…');
   try{
     const {data,error}=await db.rpc('digiy_loc_master_save_reservation_v1',{
       p_unit_id:unitId,p_start_day:dates[0],p_end_day:dates[dates.length-1],p_guest_name:guestName,p_guest_phone:guestPhone,p_source:$('reservationSource').value,p_note:$('reservationNote').value.trim()||null
@@ -2808,35 +2716,20 @@ async function savePrivateReservation(){
     if(error)return msg(saveStatus,'⚠️ Réservation non enregistrée : '+error.message,true);
     if(!data||!data.length)return msg(saveStatus,'⚠️ Réservation non retrouvée après écriture.',true);
 
-    // Vérification réelle du statut Occupé dans la table calendrier.
-    const {data:verifyRows,error:verifyError}=await db.from('digiy_loc_master_unit_calendar')
-      .select('day,status')
-      .eq('unit_id',unitId)
-      .in('day',dates);
-    if(verifyError)return msg(saveStatus,'⚠️ Réservation créée mais relecture calendrier impossible : '+verifyError.message,true);
-    const verifyMap=new Map((verifyRows||[]).map(row=>[String(row.day),row.status]));
-    if(!dates.every(day=>verifyMap.get(day)==='occupied')){
-      return msg(saveStatus,'⚠️ Réservation créée mais les dates ne sont pas confirmées Occupé. Aucun faux succès affiché.',true);
+    await loadData();
+    if(!dates.every(day=>states.get(day)==='occupied')){
+      render();
+      return msg(saveStatus,'⚠️ Réservation créée mais les dates ne sont pas confirmées Occupé dans le MASTER.',true);
     }
 
-    // Mettre à jour l’écran proprio immédiatement depuis la vérité confirmée.
-    dates.forEach(day=>states.set(day,'occupied'));
-
-    // Recharger le carnet propriétaire complet, notes incluses.
-    await loadReservationCarnet();
-
-    resetSelection();render();renderReservations();
+    resetSelection();
+    render();
+    renderReservations();
     $('guestName').value='';$('guestPhone').value='';$('reservationNote').value='';
-
-    // Même notification que la route rouge Occupé : fiche publique déjà ouverte = relecture immédiate.
-    const syncPayload={type:'calendar-changed',unitId,dates,status:'occupied',ts:Date.now()};
-    try{const channel=new BroadcastChannel('digiy-loc-sarlat');channel.postMessage(syncPayload);channel.close();}catch(_){ }
-    try{localStorage.setItem('digiy-loc-sarlat-sync',JSON.stringify(syncPayload));}catch(_){ }
-
-    msg(saveStatus,'✓ Réservation privée enregistrée · Occupé confirmé en base et synchronisation publique déclenchée.');
+    msg(saveStatus,'✓ Réservation privée enregistrée · Occupé confirmé dans le MASTER.');
   }finally{button.disabled=false;}
 }
-// DIGIY OWNER STATE VERIFY V1 — la base reste la seule mémoire de vérité.
+
 async function applyState(status){
   const dates=selectedDates();
   if(!dates.length)return msg(saveStatus,'⚠️ Sélectionnez une date ou une période.',true);
@@ -2844,54 +2737,32 @@ async function applyState(status){
 
   const buttons=[$('makeAvailable'),$('makeOccupied'),$('makeClosed')].filter(Boolean);
   buttons.forEach(button=>button.disabled=true);
-  msg(saveStatus,'Enregistrement et vérification…');
+  msg(saveStatus,'Enregistrement…');
 
   try{
-    const {data,error}=await db.rpc('digiy_loc_set_unit_calendar_state_v2',{
+    const {error}=await db.rpc('digiy_loc_set_unit_calendar_state_v2',{
       p_unit_id:unitId,
       p_days:dates,
       p_status:status
     });
     if(error)return msg(saveStatus,'⚠️ État refusé : '+error.message,true);
 
-    // Le retour RPC ne sert pas de vérité d'affichage :
-    // l'écriture peut être réussie même si la forme du payload varie.
-    // Toujours vérifier directement la table MASTER.
-    const {data:verifyRows,error:verifyError}=await db.from('digiy_loc_master_unit_calendar')
-      .select('day,status')
-      .eq('unit_id',unitId)
-      .in('day',dates);
-    if(verifyError){
-      render();
-      return msg(saveStatus,'⚠️ Relecture du statut impossible : '+verifyError.message,true);
-    }
-
-    const verifyMap=new Map((verifyRows||[]).map(row=>[String(row.day),row.status]));
-    const persisted=status==='available'
-      ? dates.every(day=>!verifyMap.has(day))
-      : dates.every(day=>verifyMap.get(day)===status);
-
-    // Toujours relire toute la source MASTER avant de redessiner le calendrier propriétaire.
+    // La table MASTER est l’unique vérité : reconstruction complète de states avant affichage.
     await loadData();
+
+    const persisted=status==='available'
+      ? dates.every(day=>!states.has(day))
+      : dates.every(day=>states.get(day)===status);
+
+    resetSelection();
     render();
 
     if(!persisted){
-      return msg(saveStatus,'⚠️ État écrit mais non confirmé après relecture complète. Aucun faux succès affiché.',true);
+      return msg(saveStatus,'⚠️ État non confirmé après relecture du MASTER. Aucun faux succès affiché.',true);
     }
 
     const label=status==='available'?'Disponible':status==='occupied'?'Occupé':'Fermé';
-    resetSelection();
-    render();
-    msg(saveStatus,'✓ '+label+' confirmé en base et calendrier rechargé sur '+dates.length+(dates.length===1?' date.':' dates.'));
-
-    // DIGIY OWNER PUBLIC SYNC V3 — prévenir immédiatement une fiche publique déjà ouverte.
-    const syncPayload={type:'calendar-changed',unitId,dates,status,ts:Date.now()};
-    try{
-      const channel=new BroadcastChannel('digiy-loc-sarlat');
-      channel.postMessage(syncPayload);
-      channel.close();
-    }catch(_){ }
-    try{localStorage.setItem('digiy-loc-sarlat-sync',JSON.stringify(syncPayload));}catch(_){ }
+    msg(saveStatus,'✓ '+label+' confirmé dans le MASTER sur '+dates.length+(dates.length===1?' date.':' dates.'));
   }finally{
     buttons.forEach(button=>button.disabled=false);
   }
@@ -2943,6 +2814,8 @@ $('sendCode').addEventListener('click',sendCode);$('verifyCode').addEventListene
   window.DIGIY_closeOwner=function(){
     overlay.hidden=true;
     document.documentElement.style.overflow='';
+    // À la fermeture du propriétaire, le public relit directement la table MASTER.
+    if(window.DIGIY_SYNC_PUBLIC_LOC) window.DIGIY_SYNC_PUBLIC_LOC();
   };
   if(openBtn) openBtn.addEventListener('click',openOwner);
   if(closeBtn) closeBtn.addEventListener('click',window.DIGIY_closeOwner);
