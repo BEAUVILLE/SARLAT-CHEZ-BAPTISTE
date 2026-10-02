@@ -2251,9 +2251,10 @@
                     const params = new URLSearchParams({
                         select: "day,status",
                         unit_id: "eq." + CFG.masterUnitId,
-                        and: `(day.gte.${todayIso},day.lte.${CFG.lastDate})`,
                         order: "day.asc"
                     });
+                    params.append("day", "gte." + todayIso);
+                    params.append("day", "lte." + CFG.lastDate);
 
                     const response = await fetch(
                         SUPABASE_URL + "/rest/v1/digiy_loc_master_unit_calendar?" + params.toString(),
@@ -2266,8 +2267,12 @@
 
                     const rows = await response.json();
                     const safeRows = Array.isArray(rows) ? rows : [];
-                    CFG.blockedDates = safeRows.filter(row => row.status === "occupied").map(row => row.day);
-                    CFG.closedDates = safeRows.filter(row => row.status === "closed").map(row => row.day);
+                    CFG.blockedDates = Array.from(new Set(
+                        safeRows.filter(row => row && row.day && row.status === "occupied").map(row => String(row.day))
+                    )).sort();
+                    CFG.closedDates = Array.from(new Set(
+                        safeRows.filter(row => row && row.day && row.status === "closed").map(row => String(row.day))
+                    )).sort();
 
                     if (window.DIGIY_RENDER_AVAILABILITY) window.DIGIY_RENDER_AVAILABILITY(safeRows);
                     if (window.DIGIY_REFRESH_PUBLIC_CALENDAR) window.DIGIY_REFRESH_PUBLIC_CALENDAR();
