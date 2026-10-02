@@ -2854,13 +2854,9 @@ async function applyState(status){
     });
     if(error)return msg(saveStatus,'⚠️ État refusé : '+error.message,true);
 
-    const rows=Array.isArray(data)?data:[];
-    const returnedDays=new Set(rows.map(row=>String(row.day)));
-    if(rows.length!==dates.length || dates.some(day=>!returnedDays.has(day))){
-      return msg(saveStatus,'⚠️ La base n’a pas confirmé toute la sélection.',true);
-    }
-
-    // DIGIY OWNER STATE VERIFY V2 — confirmer le statut sans dépendre du chargement des tarifs.
+    // Le retour RPC ne sert pas de vérité d'affichage :
+    // l'écriture peut être réussie même si la forme du payload varie.
+    // Toujours vérifier directement la table MASTER.
     const {data:verifyRows,error:verifyError}=await db.from('digiy_loc_master_unit_calendar')
       .select('day,status')
       .eq('unit_id',unitId)
