@@ -1,4 +1,4 @@
-const CACHE = "sarlat-chez-baptiste-v4-20260921";
+const CACHE = "sarlat-chez-baptiste-v5-20261002-owner-single-source";
 const CORE = [
   "./",
   "./index.html",
