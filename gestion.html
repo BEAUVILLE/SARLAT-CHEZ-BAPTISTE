@@ -22,7 +22,7 @@
 </head>
 <body>
 <div class="wrap">
-<header class="top"><div class="brand">DIGIYLYFE · MASTER LOC<small>Gestion propriétaire — SARLAT CHEZ BAPTISTE</small></div><a class="back" href="https://sarlat-chez-baptiste.digiylyfe.com/">← Voir la fiche publique</a></header>
+<header class="top"><div class="brand">DIGIYLYFE · MASTER LOC<small>Gestion propriétaire — SARLAT CHEZ BAPTISTE</small></div><a class="back" id="digiyOwnerBack" href="https://sarlat-chez-baptiste.digiylyfe.com/">← Voir la fiche publique</a></header>
 <section class="panel" id="loginPanel">
 <span class="eyebrow">Accès privé</span><h1>Gérer mes dates.</h1><p class="muted">Connectez-vous pour gérer Libre / Occupé / Fermé et vos tarifs.</p>
 <div class="field"><label for="email">Email propriétaire</label><input id="email" type="email" autocomplete="email" placeholder="votre@email.com"></div>
@@ -68,6 +68,17 @@ const SUPABASE_KEY='sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3';
 const SITE_SLUG='sarlat-chez-baptiste';
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,detectSessionInUrl:true}});
 const $=id=>document.getElementById(id);
+const ownerBack=$('digiyOwnerBack');
+if(ownerBack){
+  ownerBack.addEventListener('click',event=>{
+    try{
+      if(window.parent&&window.parent!==window&&typeof window.parent.DIGIY_closeOwner==='function'){
+        event.preventDefault();
+        window.parent.DIGIY_closeOwner();
+      }
+    }catch(_){}
+  });
+}
 const loginPanel=$('loginPanel'),managerPanel=$('managerPanel'),loginStatus=$('loginStatus'),saveStatus=$('saveStatus');
 let units=[],unitId=null,current=new Date(),states=new Map(),prices=new Map(),reservations=[],basePrice=78,currency='EUR',start=null,end=null;
 current=new Date(current.getFullYear(),current.getMonth(),1,12);
