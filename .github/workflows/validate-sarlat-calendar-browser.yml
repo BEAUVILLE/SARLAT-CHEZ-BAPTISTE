@@ -1,0 +1,56 @@
+name: Validate Sarlat calendar browser
+
+on:
+  push:
+    branches:
+      - test/sarlat-calendar-browser
+
+permissions:
+  contents: read
+
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Checkout exact code SHA
+        run: git checkout --detach 06c586ea6496b9c22ebd6b1bb890bcc1f1b999f7
+      - name: Install Chromium
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install playwright@1.55.0 >/dev/null
+          npx playwright install --with-deps chromium
+      - name: Serve exact SHA
+        run: |
+          python3 -m http.server 8765 >/tmp/sarlat-http.log 2>&1 &
+          echo $! >/tmp/sarlat-http.pid
+      - name: Browser checks
+        run: |
+          node <<'NODE'
+          const { chromium } = require('playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            const page=await browser.newPage({viewport:{width:1280,height:900}});
+            const errors=[];
+            page.on('pageerror',e=>errors.push(String(e)));
+            await page.goto('http://127.0.0.1:8765/index.html',{waitUntil:'networkidle',timeout:60000});
+            await page.waitForTimeout(2500);
+
+            for (const day of ['2026-10-12','2026-10-14','2026-10-15']) {
+              const cell=page.locator('[data-date="'+day+'"]');
+              await cell.waitFor({state:'attached',timeout:15000});
+              const cls=await cell.getAttribute('class');
+              if(!cls || !/occupied|blocked/.test(cls)) throw new Error(day+' non rendu Occupé: '+cls);
+            }
+
+            await page.locator('#digiyOwnerOpen').click();
+            const frame=page.frameLocator('#digiyOwnerFrame');
+            await frame.locator('#loginPanel').waitFor({state:'visible',timeout:15000});
+            if(errors.length) throw new Error('JavaScript errors: '+errors.join(' | '));
+            console.log('PUBLIC_MASTER_OK 12,14,15 occupied');
+            console.log('OWNER_IFRAME_OK login panel loaded');
+            await browser.close();
+          })().catch(e=>{console.error(e);process.exit(1)});
+          NODE
