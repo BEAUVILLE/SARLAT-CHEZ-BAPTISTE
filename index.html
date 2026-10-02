@@ -2405,16 +2405,32 @@
                 refreshPublicLoc();
             });
 
-            // Retour sur l’onglet : relecture immédiate de Supabase.
+            // Retour / restauration navigateur : toujours relire la vérité Supabase.
             window.addEventListener('focus',refreshPublicLoc);
+            window.addEventListener('pageshow',refreshPublicLoc);
+            window.addEventListener('online',refreshPublicLoc);
             document.addEventListener('visibilitychange',()=>{
                 if(document.visibilityState==='visible')refreshPublicLoc();
             });
 
-            // Autre appareil / autre navigateur : resynchronisation régulière.
+            // Dès que le calendrier revient réellement à l'écran, forcer une relecture MASTER.
+            const publicCalendarContainer=document.getElementById('calendarContainer');
+            if(publicCalendarContainer){
+                publicCalendarContainer.addEventListener('pointerdown',refreshPublicLoc,{passive:true});
+                publicCalendarContainer.addEventListener('touchstart',refreshPublicLoc,{passive:true});
+                if('IntersectionObserver' in window){
+                    const calendarObserver=new IntersectionObserver(entries=>{
+                        if(entries.some(entry=>entry.isIntersecting))refreshPublicLoc();
+                    },{threshold:0.15});
+                    calendarObserver.observe(publicCalendarContainer);
+                    window.DIGIY_PUBLIC_CALENDAR_OBSERVER=calendarObserver;
+                }
+            }
+
+            // Autre appareil / autre navigateur : resynchronisation régulière tant que la page est visible.
             setInterval(()=>{
                 if(document.visibilityState==='visible')refreshPublicLoc();
-            },15000);
+            },5000);
 
             // ===== FORMULAIRE =====
             (function initForm() {
