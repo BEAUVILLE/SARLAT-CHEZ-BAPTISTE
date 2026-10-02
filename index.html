@@ -733,6 +733,16 @@
             cursor: not-allowed;
             text-decoration: line-through;
         }
+        .calendar-grid .day .day-status {
+            display:block;
+            margin-top:2px;
+            font-size:8px;
+            line-height:1;
+            font-weight:1000;
+            letter-spacing:.02em;
+        }
+        .calendar-grid .day.blocked .day-status { color:#b91c1c; }
+        .calendar-grid .day.closed .day-status { color:#fff; }
         .closed-period {
             background: #35302d !important;
             color: #fff !important;
@@ -2190,7 +2200,13 @@
                         const priceHtml = !disabled
                             ? `<small class="day-price">${eurText(priceForIso(dateIso))}</small>`
                             : "";
-                        html += `<div class="${cls}" data-date="${dateIso}"><span class="day-number">${d}</span>${priceHtml}</div>`;
+                        const stateHtml = state === "occupied"
+                            ? '<small class="day-status">Occupé</small>'
+                            : state === "closed"
+                                ? '<small class="day-status">Fermé</small>'
+                                : "";
+                        const ariaDisabled = blocked ? ' aria-disabled="true"' : "";
+                        html += `<div class="${cls}" data-date="${dateIso}" data-state="${state || "available"}"${ariaDisabled}><span class="day-number">${d}</span>${stateHtml}${priceHtml}</div>`;
                     }
 
                     grid.innerHTML = html;
@@ -2274,8 +2290,13 @@
                         safeRows.filter(row => row && row.day && row.status === "closed").map(row => String(row.day))
                     )).sort();
 
-                    if (window.DIGIY_RENDER_AVAILABILITY) window.DIGIY_RENDER_AVAILABILITY(safeRows);
+                    // Le calendrier visuel est prioritaire : appliquer la vérité Supabase immédiatement.
                     if (window.DIGIY_REFRESH_PUBLIC_CALENDAR) window.DIGIY_REFRESH_PUBLIC_CALENDAR();
+                    try {
+                        if (window.DIGIY_RENDER_AVAILABILITY) window.DIGIY_RENDER_AVAILABILITY(safeRows);
+                    } catch (availabilityError) {
+                        console.warn("[SARLAT MASTER] Liste de disponibilités non rendue, calendrier public conservé.", availabilityError);
+                    }
                 } catch (error) {
                     console.warn("[SARLAT MASTER] Lecture calendrier REST indisponible, repli local conservé.", error);
                     return;
