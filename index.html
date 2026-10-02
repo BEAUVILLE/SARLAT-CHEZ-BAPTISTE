@@ -1389,7 +1389,7 @@
             <div class="top-actions">
                 <a href="https://digiylyfe.com/" style="flex:0 0 auto;width:auto;min-height:42px;display:inline-flex;align-items:center;justify-content:flex-start;gap:6px;padding:8px 12px;border:2px solid #c99743;border-radius:999px;background:#315b43;color:#fff;text-decoration:none;font-size:12px;font-weight:1000;letter-spacing:.01em;box-shadow:0 6px 16px rgba(49,91,67,.18);justify-self:start">← RETOUR DIGIYLYFE.COM</a>
                 <a class="back" href="https://digiylyfe.com/sarlat.html">← Découvrir Sarlat</a>
-                <a class="owner-access" href="https://pro-espace.digiylyfe.com/?site=sarlat-chez-baptiste&v=20261002-1412" rel="nofollow" aria-label="Accès propriétaire SARLAT CHEZ BAPTISTE">🔐 Accès propriétaire</a>
+                <a id="digiyOwnerOpen" class="owner-access" href="#owner" rel="nofollow" aria-label="Accès propriétaire SARLAT CHEZ BAPTISTE">🔐 Accès propriétaire</a>
                 
             </div>
         </header>
@@ -2875,19 +2875,18 @@ async function applyState(status){
       ? dates.every(day=>!verifyMap.has(day))
       : dates.every(day=>verifyMap.get(day)===status);
 
-    if(!persisted){
-      render();
-      return msg(saveStatus,'⚠️ État non retrouvé après relecture. Aucun faux succès affiché.',true);
-    }
+    // Toujours relire toute la source MASTER avant de redessiner le calendrier propriétaire.
+    await loadData();
+    render();
 
-    // Le statut est confirmé : mettre à jour l’affichage immédiatement.
-    if(status==='available') dates.forEach(day=>states.delete(day));
-    else dates.forEach(day=>states.set(day,status));
+    if(!persisted){
+      return msg(saveStatus,'⚠️ État écrit mais non confirmé après relecture complète. Aucun faux succès affiché.',true);
+    }
 
     const label=status==='available'?'Disponible':status==='occupied'?'Occupé':'Fermé';
     resetSelection();
     render();
-    msg(saveStatus,'✓ '+label+' confirmé en base sur '+dates.length+(dates.length===1?' date.':' dates.'));
+    msg(saveStatus,'✓ '+label+' confirmé en base et calendrier rechargé sur '+dates.length+(dates.length===1?' date.':' dates.'));
 
     // DIGIY OWNER PUBLIC SYNC V3 — prévenir immédiatement une fiche publique déjà ouverte.
     const syncPayload={type:'calendar-changed',unitId,dates,status,ts:Date.now()};
