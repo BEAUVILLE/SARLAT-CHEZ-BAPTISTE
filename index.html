@@ -2571,8 +2571,10 @@
   };
   if(openBtn) openBtn.addEventListener('click',openOwner);
   if(closeBtn) closeBtn.addEventListener('click',window.DIGIY_closeOwner);
-  if(location.hash==='#owner') setTimeout(openOwner,0);
-  window.addEventListener('hashchange',()=>{ if(location.hash==='#owner') openOwner(); });
+  // Never turn a public visitor URL (including a shared #owner fragment)
+  // into the private owner overlay automatically. Owner access requires
+  // an explicit click on the dedicated "Accès propriétaire" control.
+  // A returning guest and a shared/QR public URL must stay on the vitrine.
 })();
 </script>
 </body>
