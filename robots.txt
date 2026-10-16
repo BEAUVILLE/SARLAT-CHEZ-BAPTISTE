@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://sarlat-chez-baptiste.digiylyfe.com/sitemap.xml
