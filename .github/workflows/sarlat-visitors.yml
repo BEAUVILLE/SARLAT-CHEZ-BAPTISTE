@@ -1,0 +1,17 @@
+name: Chez Baptiste Sarlat — WO 中文 visiteurs
+on:
+  pull_request:
+    paths:
+      - index.html
+      - assets/digiy-sarlat-wo-zh-visitor.js
+      - tests/test_sarlat_locale.py
+      - .github/workflows/sarlat-visitors.yml
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Visitor translations, owner reservation safety and JS
+        run: python3 -m unittest discover -s tests -p 'test_sarlat_locale.py' -v
