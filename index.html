@@ -1387,12 +1387,18 @@
                 <small>Chambre privée chez l'habitant</small>
             </div>
             <div class="top-actions">
+                <nav id="digiySarlatLanguages" aria-label="Langues / 语言" style="display:flex;flex-wrap:wrap;gap:4px;align-items:center">
+                  <button type="button" data-lang="fr" aria-pressed="true">FR</button>
+                  <button type="button" data-lang="wo" aria-pressed="false">WO</button>
+                  <button type="button" data-lang="zh" aria-pressed="false" lang="zh-CN">中文</button>
+                </nav>
                 <a href="https://digiylyfe.com/" style="flex:0 0 auto;width:auto;min-height:42px;display:inline-flex;align-items:center;justify-content:flex-start;gap:6px;padding:8px 12px;border:2px solid #c99743;border-radius:999px;background:#315b43;color:#fff;text-decoration:none;font-size:12px;font-weight:1000;letter-spacing:.01em;box-shadow:0 6px 16px rgba(49,91,67,.18);justify-self:start">← RETOUR DIGIYLYFE.COM</a>
                 <a class="back" href="https://digiylyfe.com/sarlat.html">← Découvrir Sarlat</a>
                 <a id="digiyOwnerOpen" class="owner-access" href="#owner" rel="nofollow" aria-label="Accès propriétaire SARLAT CHEZ BAPTISTE">🔐 Accès propriétaire</a>
                 
             </div>
         </header>
+        <p id="digiySarlatTranslationNote" hidden style="margin:5px 12px 10px;font-size:12px;font-weight:700;line-height:1.5;color:#684c20"></p>
 <section id="digiySarlatPwa" aria-label="Installer Chez Baptiste Sarlat" style="width:min(960px,calc(100% - 24px));margin:14px auto 18px;box-sizing:border-box;padding:10px;border:1px solid rgba(201,151,67,.68);border-radius:18px;background:rgba(255,255,255,.98);color:#25190f;box-shadow:0 12px 30px rgba(0,0,0,.14);font-family:system-ui,-apple-system,'Segoe UI',sans-serif;text-align:center;">
   <div style="font-size:12px;font-weight:1000;margin-bottom:8px;">📲 CHEZ BAPTISTE · SARLAT · DIGIY PRO</div>
   <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;">
@@ -2575,6 +2581,11 @@
   window.addEventListener('hashchange',()=>{ if(location.hash==='#owner') openOwner(); });
 })();
 </script>
+<style>
+#digiySarlatLanguages button{padding:8px 10px;border-radius:999px;border:1px solid #c99743;background:#fffdf8;color:#25190f;cursor:pointer;font:900 12px system-ui}
+#digiySarlatLanguages button.active{background:#315b43;color:#fff}
+</style>
+<script src="/assets/digiy-sarlat-wo-zh-visitor.js?v=20261102" defer></script>
 </body>
 </html>
 
